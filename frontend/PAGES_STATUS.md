@@ -34,10 +34,10 @@
 ### 1. API Routes Missing
 - `/api/livekit/token` - Referenced in session page but doesn't exist
   - **Fix**: Should proxy to backend API or create Next.js API route
-  - **Backend endpoint**: `http://localhost:4000/api/livekit/token`
+  - **Backend endpoint**: `http://localhost:4001/api/livekit/token`
 
 ### 2. Backend API Integration
-- Auth endpoints expect backend at `http://localhost:4000`
+- Auth endpoints expect backend at `http://localhost:4001`
 - Session page expects LiveKit token from API
 - Need to ensure backend is running
 

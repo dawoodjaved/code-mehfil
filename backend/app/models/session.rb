@@ -19,7 +19,10 @@ class Session < ApplicationRecord
   validates :status, presence: true
   
   # Callbacks
+  before_create :generate_uuid
   before_create :generate_unique_code
+  before_create :set_default_status
+  before_validation :set_default_title, on: :create
   after_create :add_creator_as_participant
   
   # Scopes
@@ -58,14 +61,30 @@ class Session < ApplicationRecord
   end
   
   private
-  
+
+  def generate_uuid
+    self.id ||= SecureRandom.uuid
+  end
+
+  def set_default_status
+    self.status ||= :draft
+  end
+
+  def set_default_title
+    if title.blank?
+      session_type_name = session_type.to_s.humanize
+      timestamp = Time.current.strftime("%B %d, %Y")
+      self.title = "#{session_type_name} Session - #{timestamp}"
+    end
+  end
+
   def generate_unique_code
     self.code = loop do
       random_code = SecureRandom.alphanumeric(8).upcase
       break random_code unless Session.exists?(code: random_code)
     end
   end
-  
+
   def add_creator_as_participant
     add_participant(created_by, role: 'owner')
   end

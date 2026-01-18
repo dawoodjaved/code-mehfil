@@ -46,10 +46,23 @@ class SessionFile < ApplicationRecord
   end
   
   def broadcast_file_updated
-    SessionsChannel.broadcast_to(
-      session,
-      type: 'file_updated',
-      file: as_json
-    )
+    return unless defined?(ActionCable)
+    begin
+      channel_class = begin
+        SessionsChannel
+      rescue NameError
+        nil
+      end
+      
+      if channel_class
+        channel_class.broadcast_to(
+          session,
+          type: 'file_updated',
+          file: as_json
+        )
+      end
+    rescue => e
+      Rails.logger.warn "Failed to broadcast file updated: #{e.message}"
+    end
   end
 end

@@ -19,8 +19,22 @@ class Judge0Service
     @api_host = ENV['JUDGE0_API_HOST'] || 'judge0-ce.p.rapidapi.com'
   end
   
+  def configured?
+    @api_key.present?
+  end
+  
   def execute(code:, language:, stdin: nil)
-    language_id = LANGUAGE_IDS[language.to_s.downcase]
+    # Check if Judge0 is configured
+    unless configured?
+      return {
+        success: false,
+        error: "Judge0 API is not configured. Please set JUDGE0_API_KEY environment variable or use fallback execution."
+      }
+    end
+    
+    # Convert language to string (handles both integer and string inputs)
+    language_str = language.is_a?(Integer) ? Execution::LANGUAGE_MAP_REVERSE[language] : language.to_s
+    language_id = LANGUAGE_IDS[language_str&.downcase]
     
     unless language_id
       return {
@@ -43,6 +57,7 @@ class Judge0Service
     
     format_result(result)
   rescue StandardError => e
+    Rails.logger.error "Judge0 execution error: #{e.message}\n#{e.backtrace.join("\n")}"
     {
       success: false,
       error: "Execution failed: #{e.message}"

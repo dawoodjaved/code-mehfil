@@ -47,14 +47,16 @@ export function EnhancedChat({ sessionId, userId, userName }: EnhancedChatProps)
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput && !codeBlock.trim()) return;
 
+    const messageContent = codeBlock.trim() || trimmedInput;
     const message: Message = {
       id: Date.now().toString(),
       userId,
       userName,
-      content: input,
-      type: codeBlock ? "CODE" : "TEXT",
+      content: messageContent,
+      type: codeBlock.trim() ? "CODE" : "TEXT",
       createdAt: new Date(),
     };
 
@@ -65,8 +67,8 @@ export function EnhancedChat({ sessionId, userId, userName }: EnhancedChatProps)
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: codeBlock || input,
-          type: codeBlock ? "CODE" : "TEXT",
+          content: messageContent,
+          type: codeBlock.trim() ? "CODE" : "TEXT",
         }),
       });
     } catch (error) {

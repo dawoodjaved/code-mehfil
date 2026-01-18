@@ -16,8 +16,8 @@ development:
   database: codepair_development
   host: localhost
   port: 5432
-  username: postgres
-  password: postgres
+  username: dawoodjaveed
+  password: ""
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -27,8 +27,8 @@ test:
   database: codepair_test
   host: localhost
   port: 5432
-  username: postgres
-  password: postgres
+  username: dawoodjaveed
+  password: ""
 
 production:
   <<: *default

@@ -30,7 +30,7 @@ EOF
 echo "📝 Creating frontend/.env.local..."
 cat > frontend/.env.local << 'EOF'
 # Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:4001
 
 # WebSocket URL
 NEXT_PUBLIC_WS_URL=ws://localhost:4000/cable
