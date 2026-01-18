@@ -1,4 +1,5 @@
-use Rack::Attack
+# Rack::Attack configuration
+# The middleware is added in config/application.rb
 
 # Throttle all requests by IP (60rpm)
 Rack::Attack.throttle("req/ip", limit: 300, period: 60) do |req|

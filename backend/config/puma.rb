@@ -6,8 +6,9 @@ port ENV.fetch("PORT") { 4000 }
 environment ENV.fetch("RAILS_ENV") { "development" }
 pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
-workers ENV.fetch("WEB_CONCURRENCY") { 2 }
-preload_app!
+# Disable workers in development to avoid fork() issues on macOS
+workers ENV.fetch("WEB_CONCURRENCY") { ENV["RAILS_ENV"] == "production" ? 2 : 0 }
+preload_app! if ENV.fetch("WEB_CONCURRENCY", "0").to_i > 0
 
 plugin :tmp_restart
 

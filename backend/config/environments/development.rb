@@ -1,4 +1,4 @@
-require_relative "application"
+require_relative "../application"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -37,14 +37,14 @@ Rails.application.configure do
   # Tell Active Support which deprecation messages to disallow.
   config.active_support.disallowed_deprecation_warnings = []
   
-  # Raise an error on page load if there are pending migrations.
-  config.active_record.migration_error = :page_load
+  # Disable migration check in development to avoid database connection issues
+  # config.active_record.migration_error = :page_load
   
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true
   
   # Suppress logger output for asset requests.
-  config.assets.quiet = true if respond_to?(:assets)
+  # config.assets.quiet = true if respond_to?(:assets) # Not needed for API-only app
   
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true

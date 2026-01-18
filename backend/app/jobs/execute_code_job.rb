@@ -8,8 +8,8 @@ class ExecuteCodeJob < ApplicationJob
     service = Judge0Service.new
     result = service.execute(
       code: execution.code,
-      language: execution.language,
-      stdin: execution.stdin
+      language: execution.language_name,
+      stdin: execution.input
     )
     
     if result[:success]

@@ -1,4 +1,5 @@
-class ApplicationCable::Connection < ActionCable::Connection::Base
+if defined?(ActionCable)
+  class ApplicationCable::Connection < ActionCable::Connection::Base
   identified_by :current_user
   
   def connect
@@ -22,5 +23,6 @@ class ApplicationCable::Connection < ActionCable::Connection::Base
     else
       reject_unauthorized_connection
     end
+  end
   end
 end

@@ -3,14 +3,21 @@ module Api
     before_action :set_session, only: [:show, :update, :destroy, :start, :complete, :extend_time]
     
     def index
-      sessions = current_user.sessions.includes(:created_by, :participants).recent
+      # Get sessions where user is a participant OR creator
+      sessions = Session.where(
+        id: SessionParticipant.where(user: current_user).select(:session_id)
+      ).or(
+        Session.where(created_by: current_user)
+      ).includes(:created_by, :participants).recent
+      
       render json: sessions.as_json(
         include: {
           created_by: { only: [:id, :name, :email] },
           participants: {
             include: { user: { only: [:id, :name, :email] } }
           }
-        }
+        },
+        methods: [:session_type, :status]
       )
     end
     
@@ -105,7 +112,6 @@ module Api
         :description, 
         :session_type, 
         :time_limit_minutes,
-        :language,
         tags: []
       )
     end

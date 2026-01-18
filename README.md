@@ -91,7 +91,7 @@ cd ..
 # Frontend (.env.local)
 cd frontend
 cat > .env.local << EOF
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:4001
 NEXT_PUBLIC_WS_URL=ws://localhost:4000/cable
 EOF
 cd ..
@@ -127,7 +127,7 @@ npm run dev
 
 **Access Points:**
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:4000
+- **Backend API**: http://localhost:4001
 - **Rails Console**: `cd backend && rails console`
 
 ## 🎯 Quick Start

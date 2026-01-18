@@ -1,4 +1,5 @@
-class SessionsChannel < ApplicationCable::Channel
+if defined?(ActionCable)
+  class SessionsChannel < ApplicationCable::Channel
   def subscribed
     session = Session.find(params[:session_id])
     
@@ -89,5 +90,6 @@ class SessionsChannel < ApplicationCable::Channel
       file_id: data['file_id'],
       selection: data['selection']
     }
+  end
   end
 end

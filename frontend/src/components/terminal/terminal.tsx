@@ -89,15 +89,14 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-black text-green-400 font-mono text-sm">
-      <div className="border-b border-gray-700 p-2 flex items-center gap-2">
+    <div className="flex-1 flex flex-col min-h-0 w-full bg-black text-green-400 font-mono text-sm">
+      <div className="border-b border-gray-700 p-2 flex items-center gap-2 flex-shrink-0">
         <TerminalIcon className="w-4 h-4" />
         <span className="text-xs">Terminal</span>
       </div>
       <div
         ref={terminalRef}
         className="flex-1 overflow-y-auto p-4 space-y-1"
-        style={{ maxHeight: "400px" }}
       >
         {history.map((item, index) => (
           <div
@@ -111,7 +110,7 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
           <div className="text-yellow-400">Executing...</div>
         )}
       </div>
-      <div className="border-t border-gray-700 p-2 flex items-center gap-2">
+      <div className="border-t border-gray-700 p-2 flex items-center gap-2 flex-shrink-0">
         <span className="text-green-400">$</span>
         <input
           ref={inputRef}

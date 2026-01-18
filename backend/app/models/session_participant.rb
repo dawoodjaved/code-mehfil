@@ -11,6 +11,8 @@ class SessionParticipant < ApplicationRecord
   validates :role, presence: true
   
   # Callbacks
+  before_create :generate_uuid
+  before_validation :set_default_role, on: :create
   after_create :broadcast_participant_joined
   after_destroy :broadcast_participant_left
   
@@ -28,20 +30,58 @@ class SessionParticipant < ApplicationRecord
   end
   
   private
-  
-  def broadcast_participant_joined
-    SessionsChannel.broadcast_to(
-      session,
-      type: 'participant_joined',
-      participant: as_json(include: { user: { only: [:id, :name, :email] } })
-    )
+
+  def generate_uuid
+    self.id ||= SecureRandom.uuid
   end
-  
+
+  def set_default_role
+    self.role ||= :participant
+  end
+
+  def broadcast_participant_joined
+    # Skip broadcasting if ActionCable is not available
+    return unless defined?(ActionCable)
+    begin
+      # Check if SessionsChannel class exists by trying to reference it
+      channel_class = begin
+        SessionsChannel
+      rescue NameError
+        nil
+      end
+      
+      if channel_class
+        channel_class.broadcast_to(
+          session,
+          type: 'participant_joined',
+          participant: as_json(include: { user: { only: [:id, :name, :email] } })
+        )
+      end
+    rescue => e
+      Rails.logger.warn "Failed to broadcast participant joined: #{e.message}"
+    end
+  end
+
   def broadcast_participant_left
-    SessionsChannel.broadcast_to(
-      session,
-      type: 'participant_left',
-      participant_id: id
-    )
+    # Skip broadcasting if ActionCable is not available
+    return unless defined?(ActionCable)
+    begin
+      # Check if SessionsChannel class exists by trying to reference it
+      channel_class = begin
+        SessionsChannel
+      rescue NameError
+        nil
+      end
+      
+      if channel_class
+        channel_class.broadcast_to(
+          session,
+          type: 'participant_left',
+          participant_id: id
+        )
+      end
+    rescue => e
+      Rails.logger.warn "Failed to broadcast participant left: #{e.message}"
+    end
   end
 end

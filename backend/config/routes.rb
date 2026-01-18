@@ -35,8 +35,11 @@ Rails.application.routes.draw do
     
     # Executions
     resources :executions, only: [:index, :show]
+    
+    # LiveKit
+    post "livekit/token", to: "livekit#token"
   end
   
-  # ActionCable WebSocket
-  mount ActionCable.server => "/cable"
+  # ActionCable WebSocket (if available)
+  mount ActionCable.server => "/cable" if defined?(ActionCable)
 end

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Palette } from "lucide-react";
-import * as Monaco from "monaco-editor";
+import { Monaco } from "@/lib/monaco-config";
 
 interface Theme {
   id: string;

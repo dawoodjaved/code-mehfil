@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as Monaco from "monaco-editor";
+import { Monaco } from "@/lib/monaco-config";
 
 export interface ErrorLensError {
   line: number;
