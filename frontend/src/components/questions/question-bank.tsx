@@ -38,7 +38,11 @@ export function QuestionBank({ workspaceId, onSelectQuestion, onCreateQuestion }
       if (workspaceId) params.append("workspaceId", workspaceId);
       if (difficultyFilter !== "all") params.append("difficulty", difficultyFilter);
 
-      const response = await fetch(`/api/questions?${params}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const response = await fetch(`${apiUrl}/api/questions?${params}`, { headers });
       const data = await response.json();
       setQuestions(data);
     } catch (error) {

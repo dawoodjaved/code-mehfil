@@ -198,17 +198,17 @@ export function InterviewMode({ sessionId, questionId }: InterviewModeProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      <Tabs defaultValue="recommender" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="border-b rounded-none">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <Tabs defaultValue="recommender" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <TabsList className="border-b rounded-none flex-shrink-0 shrink-0">
           <TabsTrigger value="recommender">Problem Recommender</TabsTrigger>
           <TabsTrigger value="interview" disabled={!question}>
             Interview
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="recommender" className="flex-1 flex flex-col m-0 p-4 min-h-0 overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <TabsContent value="recommender" className="flex-1 flex flex-col m-0 p-4 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden min-w-0">
             <CodeforcesRecommender onProblemSelect={handleCodeforcesProblemSelect} />
             {question && (
               <div className="mt-4 flex-shrink-0">
@@ -245,7 +245,7 @@ export function InterviewMode({ sessionId, questionId }: InterviewModeProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="interview" className="flex-1 flex flex-col m-0 min-h-0">
+        <TabsContent value="interview" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
           {!question ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">

@@ -139,9 +139,9 @@ export function CodeforcesRecommender({ onProblemSelect }: CodeforcesRecommender
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden min-w-0">
       <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <CardHeader className="flex-shrink-0">
+        <CardHeader className="flex-shrink-0 shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle>Codeforces Problem Recommender</CardTitle>
             <Button
@@ -155,9 +155,10 @@ export function CodeforcesRecommender({ onProblemSelect }: CodeforcesRecommender
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col min-h-0 overflow-y-auto space-y-4">
+        <CardContent className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden pt-0">
+          <div className="flex-1 flex flex-col min-h-0 gap-4">
           {/* Quick Filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -193,16 +194,16 @@ export function CodeforcesRecommender({ onProblemSelect }: CodeforcesRecommender
           </div>
 
           {error && (
-            <div className="p-3 bg-destructive/10 text-destructive rounded text-sm">
+            <div className="p-3 bg-destructive/10 text-destructive rounded text-sm flex-shrink-0">
               {error}
             </div>
           )}
 
-          {/* Recent Contests */}
+          {/* Recent Contests - grows to fill when no problems shown */}
           {contests.length > 0 && (
-            <div className="flex-shrink-0">
-              <h3 className="text-sm font-semibold mb-2">Recent Contests</h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className={problems.length > 0 ? "flex-shrink-0" : "flex-1 flex flex-col min-h-0 overflow-hidden"}>
+              <h3 className="text-sm font-semibold mb-2 flex-shrink-0">Recent Contests</h3>
+              <div className={`space-y-2 overflow-y-auto overflow-x-hidden ${problems.length > 0 ? "max-h-48" : "flex-1 min-h-0"}`}>
                 {contests.map((contest) => (
                   <div
                     key={contest.id}
@@ -232,11 +233,11 @@ export function CodeforcesRecommender({ onProblemSelect }: CodeforcesRecommender
           )}
 
           {problems.length > 0 && !loading && (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <h3 className="text-sm font-semibold mb-2 flex-shrink-0">
                 {selectedContest ? `Problems from Contest ${selectedContest}` : "Recommended Problems"}
               </h3>
-              <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
+              <div className="flex-1 space-y-2 overflow-y-auto min-h-0 overflow-x-hidden">
                 {problems.map((problem, idx) => (
                   <Card
                     key={`${problem.contestId}-${problem.index}`}
@@ -286,6 +287,7 @@ export function CodeforcesRecommender({ onProblemSelect }: CodeforcesRecommender
               </div>
             </div>
           )}
+          </div>
         </CardContent>
       </Card>
     </div>

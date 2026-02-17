@@ -26,10 +26,12 @@ module CodepairBackend
     if defined?(ActionCable)
       config.action_cable.mount_path = '/cable'
       config.action_cable.url = ENV.fetch("ACTION_CABLE_URL", "ws://localhost:4000/cable")
-      config.action_cable.allowed_request_origins = [
-        'http://localhost:3000',
-        'http://localhost:3003',
-        'http://localhost:3005',
+      # Production: set CORS_ORIGINS env var (comma-separated, e.g. https://yourapp.vercel.app)
+      origins = ENV.fetch("CORS_ORIGINS", "http://localhost:3000,http://localhost:3003,http://localhost:3005").split(",").map(&:strip).reject(&:empty?)
+      config.action_cable.allowed_request_origins = origins.any? ? origins : [
+        "http://localhost:3000",
+        "http://localhost:3003",
+        "http://localhost:3005",
         /http:\/\/localhost:.*/
       ]
     end

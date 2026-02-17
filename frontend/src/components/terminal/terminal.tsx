@@ -25,6 +25,14 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
     }
   }, [history]);
 
+  const builtInHelp = `Available commands:
+  help          - Show this help message
+  clear         - Clear terminal
+  ls            - List files
+  pwd           - Show current directory
+  echo <text>   - Echo text
+  run           - Run code from the editor`;
+
   const executeCommand = async (command: string) => {
     if (!command.trim()) return;
 
@@ -33,47 +41,48 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
 
     try {
       let output = "";
+      const cmd = command.toLowerCase().trim().split(/\s+/)[0];
 
-      if (onCommand) {
-        output = await onCommand(command);
-      } else {
-        // Default command handling
-        switch (command.toLowerCase().split(" ")[0]) {
-          case "help":
-            output = `Available commands:
-  help          - Show this help message
-  clear         - Clear terminal
-  ls            - List files
-  pwd           - Show current directory
-  echo <text>   - Echo text
-  run <file>    - Execute a file`;
-            break;
-          case "clear":
-            setHistory([]);
-            setIsExecuting(false);
-            return;
-          case "ls":
-            output = "main.py\napp.js\nREADME.md";
-            break;
-          case "pwd":
-            output = "/workspace";
-            break;
-          case "echo":
-            output = command.substring(5).trim();
-            break;
-          case "run":
-            output = "Executing file...";
-            break;
-          default:
-            output = `Command not found: ${command.split(" ")[0]}`;
-        }
+      // Always handle built-in commands locally so they work even when onCommand is provided
+      switch (cmd) {
+        case "help":
+          output = builtInHelp;
+          break;
+        case "clear":
+          setHistory([]);
+          setIsExecuting(false);
+          setCurrentInput("");
+          inputRef.current?.focus();
+          return;
+        case "ls":
+          output = "main.py\napp.js\nREADME.md";
+          break;
+        case "pwd":
+          output = "/workspace";
+          break;
+        case "echo":
+          output = command.substring(5).trim();
+          break;
+        case "run":
+          if (onCommand) {
+            output = await onCommand(command);
+          } else {
+            output = "Run code from the Code tab, or use the Run Code button.";
+          }
+          break;
+        default:
+          if (onCommand) {
+            output = await onCommand(command);
+          } else {
+            output = `Command not found: ${cmd}`;
+          }
       }
 
       setHistory((prev) => [...prev, { type: "output", content: output }]);
     } catch (error) {
       setHistory((prev) => [
         ...prev,
-        { type: "output", content: `Error: ${error.message}` },
+        { type: "output", content: `Error: ${error instanceof Error ? error.message : String(error)}` },
       ]);
     } finally {
       setIsExecuting(false);

@@ -32,14 +32,28 @@ export function EnhancedChat({ sessionId, userId, userName }: EnhancedChatProps)
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Fetch messages
-    fetch(`/api/chat/${sessionId}`)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    // Fetch messages from backend
+    fetch(`${apiUrl}/api/sessions/${sessionId}/chat_messages`, { headers })
       .then((res) => res.json())
-      .then((data) => setMessages(data))
+      .then((data) =>
+        setMessages(
+          (Array.isArray(data) ? data : []).map((m: { id: string; content: string; message_type?: string; created_at?: string; user?: { id: string; name: string } }) => ({
+            id: String(m.id),
+            userId: m.user?.id ?? "",
+            userName: m.user?.name ?? "Unknown",
+            content: m.content,
+            type: (m.message_type || "text").toUpperCase() as "TEXT" | "CODE" | "SYSTEM" | "REACTION",
+            createdAt: m.created_at ? new Date(m.created_at) : new Date(),
+          }))
+        )
+      )
       .catch(console.error);
 
-    // Listen for new messages via WebSocket
-    // In production, use Socket.io or similar
+    // Listen for new messages via WebSocket (ActionCable)
   }, [sessionId]);
 
   useEffect(() => {
@@ -63,12 +77,16 @@ export function EnhancedChat({ sessionId, userId, userName }: EnhancedChatProps)
     setMessages((prev) => [...prev, message]);
 
     try {
-      await fetch(`/api/chat/${sessionId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      await fetch(`${apiUrl}/api/sessions/${sessionId}/chat_messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           content: messageContent,
-          type: codeBlock.trim() ? "CODE" : "TEXT",
+          message_type: codeBlock.trim() ? "code" : "text",
         }),
       });
     } catch (error) {

@@ -23,10 +23,14 @@ export function UserPresence({ sessionId, currentUserId }: UserPresenceProps) {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Listen for presence updates via WebSocket
-    // In production, use Socket.io or similar
-    const eventSource = new EventSource(`/api/sessions/${sessionId}/presence`);
-    
+    // Note: /presence SSE endpoint is not implemented on backend - presence comes from ActionCable
+    // This will 404; participants are shown via /api/sessions/:id/participants
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const presenceUrl = `${apiUrl}/api/sessions/${sessionId}/presence`;
+    const eventSource = new EventSource(presenceUrl);
+
+    eventSource.onerror = () => eventSource.close(); // Endpoint may not exist
+
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "user-joined") {

@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { MonacoEditor } from "@/components/editor/monaco-editor";
 import { VideoRoom } from "@/components/video/video-room";
-import { Whiteboard } from "@/components/whiteboard/whiteboard";
 import { FileExplorer } from "@/components/file-tree/file-explorer";
 import { Terminal } from "@/components/terminal/terminal";
 import { InterviewMode } from "@/components/interview/interview-mode";
+
+const Whiteboard = dynamic(
+  () => import("@/components/whiteboard/whiteboard").then((mod) => ({ default: mod.Whiteboard })),
+  { ssr: false }
+);
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -225,7 +230,7 @@ export default function SessionPage() {
         },
         body: JSON.stringify({
           code,
-          language,
+          language: (language || "javascript").toLowerCase(),
           stdin: "",
         }),
       });
@@ -292,12 +297,12 @@ export default function SessionPage() {
   };
 
   const handleTerminalCommand = async (command: string): Promise<string> => {
-    // Execute terminal commands
+    // "run" is handled by the Terminal's built-in switch and passed here
     if (command.startsWith("run") || command === "run") {
       await executeCode();
       return executionOutput || "Executing code...";
     }
-    return `Command: ${command}`;
+    return `Command not found: ${command.split(/\s+/)[0]}. Type 'help' for available commands.`;
   };
 
   return (
@@ -436,7 +441,7 @@ export default function SessionPage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Sidebar - File Explorer */}
         <FileExplorer
           files={files}
@@ -446,10 +451,10 @@ export default function SessionPage() {
           selectedFileId={selectedFile?.id}
         />
 
-        {/* Main Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <TabsList className="border-b rounded-none flex-shrink-0">
+        {/* Main Area - fills remaining height */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <TabsList className="border-b rounded-none flex-shrink-0 shrink-0">
               <TabsTrigger value="code">
                 <Code className="w-4 h-4 mr-2" />
                 Code
@@ -472,8 +477,8 @@ export default function SessionPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="code" className="flex-1 flex flex-col m-0 min-h-0">
-              <div className="flex items-center justify-between p-2 border-b bg-muted/50 flex-shrink-0">
+            <TabsContent value="code" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
+              <div className="flex items-center justify-between p-2 border-b bg-muted/50 flex-shrink-0 shrink-0">
                 <div className="text-sm text-muted-foreground">
                   {language.toUpperCase()} • {code.split('\n').length} lines
                 </div>
@@ -496,7 +501,7 @@ export default function SessionPage() {
                   )}
                 </Button>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden bg-background">
                 <MonacoEditor
                   sessionId={sessionId}
                   fileId={selectedFile?.id || "main"}
@@ -513,32 +518,36 @@ export default function SessionPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="interview" className="flex-1 flex flex-col m-0 min-h-0">
-              <InterviewMode sessionId={sessionId} />
+            <TabsContent value="interview" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <InterviewMode sessionId={sessionId} />
+              </div>
             </TabsContent>
 
-            <TabsContent value="video" className="flex-1 flex flex-col m-0 min-h-0">
-              {livekitToken ? (
-                <VideoRoom
-                  roomName={sessionId}
-                  token={livekitToken}
-                  onDisconnect={() => setLivekitToken(null)}
-                />
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p>Loading video room...</p>
+            <TabsContent value="video" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
+              <div className="flex-1 min-h-0 flex flex-col bg-background">
+                {livekitToken ? (
+                  <VideoRoom
+                    roomName={sessionId}
+                    token={livekitToken}
+                    onDisconnect={() => setLivekitToken(null)}
+                  />
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p>Loading video room...</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </TabsContent>
 
-            <TabsContent value="whiteboard" className="flex-1 flex flex-col m-0 min-h-0 p-0 overflow-hidden">
+            <TabsContent value="whiteboard" className="flex-1 flex flex-col m-0 min-h-0 p-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
               <Whiteboard sessionId={sessionId} />
             </TabsContent>
 
-            <TabsContent value="terminal" className="flex-1 flex flex-col m-0 min-h-0">
+            <TabsContent value="terminal" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
               <Terminal sessionId={sessionId} onCommand={handleTerminalCommand} />
             </TabsContent>
           </Tabs>
@@ -581,36 +590,38 @@ export default function SessionPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Quick Run</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={executeCode}
-                  disabled={isExecuting || !code.trim()}
-                  size="sm"
-                  className="w-full gap-2"
-                >
-                  {isExecuting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                      Running...
-                    </>
-                  ) : (
-                    <>
-                      <TerminalIcon className="w-4 h-4" />
-                      Run Code
-                    </>
+            {activeTab === "code" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Quick Run</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={executeCode}
+                    disabled={isExecuting || !code.trim()}
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    {isExecuting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        Running...
+                      </>
+                    ) : (
+                      <>
+                        <TerminalIcon className="w-4 h-4" />
+                        Run Code
+                      </>
+                    )}
+                  </Button>
+                  {executionOutput && (
+                    <pre className="text-xs bg-background p-2 rounded max-h-32 overflow-y-auto mt-2 whitespace-pre-wrap">
+                      {executionOutput}
+                    </pre>
                   )}
-                </Button>
-                {executionOutput && (
-                  <pre className="text-xs bg-background p-2 rounded max-h-32 overflow-y-auto mt-2 whitespace-pre-wrap">
-                    {executionOutput}
-                  </pre>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
