@@ -1,6 +1,8 @@
-# Clear existing data
+# Clear existing data (use delete_all to avoid callback/enum load issues on empty/partial DBs)
 puts "Clearing existing data..."
-[Execution, ChatMessage, SessionQuestion, TestCase, SessionFile, SessionParticipant, Session, Question, User].each(&:destroy_all)
+[Execution, ChatMessage, SessionQuestion, TestCase, SessionFile, SessionParticipant, Session, Question, User].each do |model|
+  model.delete_all
+end
 
 puts "Creating users..."
 users = [
@@ -169,7 +171,6 @@ session1 = Session.create!(
   session_type: :interview,
   status: :draft,
   created_by: users.first,
-  language: "javascript",
   time_limit_minutes: 60,
   tags: ["algorithms", "interview", "javascript"]
 )
@@ -180,7 +181,6 @@ session2 = Session.create!(
   session_type: :collaboration,
   status: :active,
   created_by: users.second,
-  language: "python",
   tags: ["pair-programming", "leetcode"]
 )
 

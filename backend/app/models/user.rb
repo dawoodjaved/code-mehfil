@@ -15,6 +15,7 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 6 }, if: -> { new_record? || !password.nil? }
   
   # Callbacks
+  before_validation :generate_id, on: :create
   before_save :downcase_email
   
   # Instance methods
@@ -23,10 +24,16 @@ class User < ApplicationRecord
   end
   
   def update_last_seen!
+    return unless self.class.column_names.include?("last_seen_at")
+
     update_column(:last_seen_at, Time.current)
   end
   
   private
+  
+  def generate_id
+    self.id ||= SecureRandom.uuid
+  end
   
   def downcase_email
     self.email = email.downcase if email.present?

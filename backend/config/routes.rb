@@ -31,12 +31,17 @@ Rails.application.routes.draw do
     end
     
     # Questions
-    resources :questions, only: [:index, :show, :create, :update, :destroy]
+    resources :questions, only: [:index, :show, :create, :update, :destroy] do
+      resources :test_cases, only: [:create, :destroy]
+    end
     
     # Executions
     resources :executions, only: [:index, :show]
+    
+    # LiveKit
+    post "livekit/token", to: "livekit#token"
   end
   
   # ActionCable WebSocket
-  mount ActionCable.server => "/cable"
+  mount ActionCable.server => "/cable" if defined?(ActionCable)
 end

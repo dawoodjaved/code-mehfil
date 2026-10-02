@@ -3,7 +3,7 @@
 development:
   adapter: redis
   url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
-  channel_prefix: codepair_development
+  channel_prefix: codemehfil_development
 
 test:
   adapter: test
@@ -11,4 +11,4 @@ test:
 production:
   adapter: redis
   url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
-  channel_prefix: codepair_production
+  channel_prefix: codemehfil_production

@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 
 interface TerminalProps {
   sessionId: string;
+  fileNames?: string[];
   onCommand?: (command: string) => Promise<string>;
 }
 
-export function Terminal({ sessionId, onCommand }: TerminalProps) {
+export function Terminal({ sessionId, fileNames = [], onCommand }: TerminalProps) {
   const [history, setHistory] = useState<Array<{ type: "input" | "output"; content: string }>>([
-    { type: "output", content: "Welcome to CodePair Terminal" },
+    { type: "output", content: "Welcome to CodeMehfil Terminal" },
     { type: "output", content: "Type 'help' for available commands" },
   ]);
   const [currentInput, setCurrentInput] = useState("");
@@ -25,6 +26,14 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
     }
   }, [history]);
 
+  const builtInHelp = `Available commands:
+  help          - Show this help message
+  clear         - Clear terminal
+  ls            - List session files
+  pwd           - Show current directory
+  echo <text>   - Echo text
+  run           - Run code from the editor`;
+
   const executeCommand = async (command: string) => {
     if (!command.trim()) return;
 
@@ -33,92 +42,89 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
 
     try {
       let output = "";
+      const cmd = command.toLowerCase().trim().split(/\s+/)[0];
 
-      if (onCommand) {
-        output = await onCommand(command);
-      } else {
-        // Default command handling
-        switch (command.toLowerCase().split(" ")[0]) {
-          case "help":
-            output = `Available commands:
-  help          - Show this help message
-  clear         - Clear terminal
-  ls            - List files
-  pwd           - Show current directory
-  echo <text>   - Echo text
-  run <file>    - Execute a file`;
-            break;
-          case "clear":
-            setHistory([]);
-            setIsExecuting(false);
-            return;
-          case "ls":
-            output = "main.py\napp.js\nREADME.md";
-            break;
-          case "pwd":
-            output = "/workspace";
-            break;
-          case "echo":
-            output = command.substring(5).trim();
-            break;
-          case "run":
-            output = "Executing file...";
-            break;
-          default:
-            output = `Command not found: ${command.split(" ")[0]}`;
-        }
+      switch (cmd) {
+        case "help":
+          output = builtInHelp;
+          break;
+        case "clear":
+          setHistory([]);
+          setIsExecuting(false);
+          setCurrentInput("");
+          inputRef.current?.focus();
+          return;
+        case "ls":
+          output =
+            fileNames.length > 0
+              ? fileNames.join("\n")
+              : "(no files in this session)";
+          break;
+        case "pwd":
+          output = `/sessions/${sessionId}`;
+          break;
+        case "echo":
+          output = command.substring(5).trim();
+          break;
+        case "run":
+          if (onCommand) {
+            output = await onCommand(command);
+          } else {
+            output = "Run code from the Code tab, or use the Run Code button.";
+          }
+          break;
+        default:
+          if (onCommand) {
+            output = await onCommand(command);
+          } else {
+            output = `Command not found: ${cmd}`;
+          }
       }
 
       setHistory((prev) => [...prev, { type: "output", content: output }]);
     } catch (error) {
       setHistory((prev) => [
         ...prev,
-        { type: "output", content: `Error: ${error.message}` },
+        { type: "output", content: `Error: ${error instanceof Error ? error.message : String(error)}` },
       ]);
     } finally {
       setIsExecuting(false);
       setCurrentInput("");
-      inputRef.current?.focus();
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isExecuting) {
-      executeCommand(currentInput);
+      e.preventDefault();
+      void executeCommand(currentInput);
     }
   };
 
   return (
-    <div className="h-full flex flex-col bg-black text-green-400 font-mono text-sm">
-      <div className="border-b border-gray-700 p-2 flex items-center gap-2">
+    <div className="flex-1 flex flex-col min-h-0 w-full bg-black text-green-400 font-mono text-sm">
+      <div className="border-b border-gray-700 p-2 flex items-center gap-2 flex-shrink-0">
         <TerminalIcon className="w-4 h-4" />
         <span className="text-xs">Terminal</span>
       </div>
-      <div
-        ref={terminalRef}
-        className="flex-1 overflow-y-auto p-4 space-y-1"
-        style={{ maxHeight: "400px" }}
-      >
+      <div ref={terminalRef} className="flex-1 overflow-y-auto p-4 space-y-1">
         {history.map((item, index) => (
           <div
             key={index}
-            className={item.type === "input" ? "text-blue-400" : "text-green-400"}
+            className={item.type === "input" ? "text-blue-400 whitespace-pre-wrap" : "text-green-400 whitespace-pre-wrap"}
           >
             {item.content}
           </div>
         ))}
-        {isExecuting && (
-          <div className="text-yellow-400">Executing...</div>
-        )}
+        {isExecuting && <div className="text-yellow-400">Executing...</div>}
       </div>
-      <div className="border-t border-gray-700 p-2 flex items-center gap-2">
+      <div className="border-t border-gray-700 p-2 flex items-center gap-2 flex-shrink-0">
         <span className="text-green-400">$</span>
         <input
           ref={inputRef}
           type="text"
           value={currentInput}
           onChange={(e) => setCurrentInput(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           disabled={isExecuting}
           className="flex-1 bg-transparent border-none outline-none text-green-400"
           placeholder="Enter command..."
@@ -126,7 +132,7 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => executeCommand(currentInput)}
+          onClick={() => void executeCommand(currentInput)}
           disabled={isExecuting || !currentInput.trim()}
         >
           <Play className="w-4 h-4" />
@@ -135,4 +141,3 @@ export function Terminal({ sessionId, onCommand }: TerminalProps) {
     </div>
   );
 }
-

@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { resolveNextPath } from "@/lib/auth";
 
 export default function SignUpPage() {
-  const router = useRouter();
+  return (
+    <div className="relative min-h-screen flex items-center justify-center bg-bg-primary p-4 overflow-hidden">
+      <Suspense fallback={<div className="text-text-muted text-sm">Loading…</div>}>
+        <SignUpForm />
+      </Suspense>
+    </div>
+  );
+}
+
+function SignUpForm() {
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,123 +32,133 @@ export default function SignUpPage() {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+
+    if (!trimmedName) {
+      setError("Name is required");
+      return;
+    }
+    if (!trimmedEmail) {
+      setError("Email is required");
+      return;
+    }
+    if (trimmedPassword !== trimmedConfirmPassword) {
       setError("Passwords do not match");
       return;
     }
-
-    if (password.length < 8) {
+    if (trimmedPassword.length < 8) {
       setError("Password must be at least 8 characters");
       return;
     }
 
     setIsLoading(true);
+    const next = resolveNextPath(searchParams.get("next"));
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
       const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          user: {
+            name: trimmedName,
+            email: trimmedEmail,
+            password: trimmedPassword,
+            password_confirmation: trimmedConfirmPassword,
+          },
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Store token
-        localStorage.setItem("token", data.token);
-        // Redirect to dashboard or home
-        router.push("/");
+        const token = data.token || data.user?.token;
+        if (token) {
+          localStorage.setItem("token", token);
+          window.location.href = next;
+        } else {
+          setError("No token received from server");
+        }
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Failed to create account");
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          (Array.isArray(errorData.errors) && errorData.errors.join(", ")) ||
+            errorData.error ||
+            "Could not create account"
+        );
       }
     } catch (err) {
-      setError("Failed to sign up. Please try again.");
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to sign up");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription>
-            Enter your information to create a new account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                minLength={8}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                minLength={8}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Sign Up"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/auth/signin" className="text-primary hover:underline">
+    <Card className="w-full max-w-md relative z-cards glass border-[rgba(255,255,255,0.1)]">
+      <CardHeader>
+        <CardTitle className="text-text-primary">Create account</CardTitle>
+        <CardDescription className="text-text-muted">
+          Sign up to create and join coding sessions
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-accent-red hover:bg-accent-red-hover rounded-full"
+          >
+            {isLoading ? "Creating…" : "Sign up"}
+          </Button>
+          <p className="text-center text-sm text-text-muted">
+            Already have an account?{" "}
+            <Link
+              href={`/auth/signin?next=${encodeURIComponent(resolveNextPath(searchParams.get("next")))}`}
+              className="text-accent-red hover:underline"
+            >
               Sign in
             </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </p>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
-

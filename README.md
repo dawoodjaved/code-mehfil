@@ -1,298 +1,167 @@
-# CodePair - Real-Time Collaborative Coding Platform
+# CodeMehfil
 
-> **"Google Docs for Code" with live execution**
+A real-time collaborative coding workspace for pair programming and technical interviews — shared editor, live chat, code execution, video, and whiteboard in one place.
 
-CodePair is a streamlined real-time code collaboration platform that enables developers to code together seamlessly. Perfect for pair programming, technical interviews, and coding practice sessions.
-
-## 🚀 Features
-
-### Core Features
-- **Real-Time Collaborative Editor** - Monaco Editor (VS Code's editor) with WebSocket synchronization and multi-cursor tracking
-- **Code Execution** - Instant code execution via Judge0 API supporting 10+ popular languages
-- **Live Chat** - Real-time text chat with typing indicators
-- **Session Management** - Create shareable sessions, join with links, and view session history
-- **Interview Mode** - Built-in timer and curated coding question bank
-
-### Tech Stack
-- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind + Monaco Editor + shadcn/ui
-- **Backend**: Rails 7.2 API + PostgreSQL + ActionCable WebSockets
-- **Code Execution**: Judge0 API (external service)
-- **Auth**: JWT-based authentication
-- **Infrastructure**: Docker Compose
-
-## 📦 Project Structure
-
-```
-codepair/
-├── frontend/              # Next.js 14 Frontend
-│   ├── src/
-│   │   ├── app/          # Next.js App Router pages
-│   │   │   ├── page.tsx           # Homepage
-│   │   │   ├── auth/              # Sign in/up pages
-│   │   │   ├── demo/              # Demo page
-│   │   │   └── session/[id]/      # Collaboration session
-│   │   ├── components/   # React components
-│   │   ├── hooks/        # Custom hooks
-│   │   ├── lib/          # Utilities
-│   │   └── store/        # Zustand state
-│   └── package.json
-├── backend/              # Rails 7.2 API
-│   ├── app/
-│   │   ├── controllers/  # API controllers
-│   │   ├── models/       # ActiveRecord models
-│   │   ├── services/     # Business logic
-│   │   └── channels/     # WebSocket channels
-│   ├── db/migrate/       # Database migrations
-│   └── Gemfile
-├── docker-compose.yml    # Docker services
-└── README.md
-```
-
-## 🛠️ Setup
-
-### Prerequisites
-- **Node.js** 18+ (use nvm)
-- **Ruby** 3.2+
-- **Docker & Docker Compose**
-- **PostgreSQL** 15+ (via Docker)
-- **Redis** 7+ (via Docker)
-
-### Installation
-
-1. **Clone and install dependencies:**
-```bash
-git clone <repository-url>
-cd CodePair
-
-# Install frontend dependencies
-cd frontend
-npm install
-cd ..
-
-# Install backend dependencies
-cd backend
-bundle install
-cd ..
-```
-
-2. **Set up environment variables:**
-```bash
-# Backend (.env)
-cd backend
-cat > .env << EOF
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codepair_development
-REDIS_URL=redis://localhost:6379/1
-JWT_SECRET=your_secret_key_here
-JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
-JUDGE0_API_KEY=your_rapidapi_key_here
-EOF
-cd ..
-
-# Frontend (.env.local)
-cd frontend
-cat > .env.local << EOF
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_WS_URL=ws://localhost:4000/cable
-EOF
-cd ..
-```
-
-3. **Start Docker services:**
-```bash
-docker-compose up -d
-
-# Verify services are running
-docker-compose ps
-```
-
-4. **Set up Rails database:**
-```bash
-cd backend
-rails db:create
-rails db:migrate
-rails db:seed  # Optional: Seed with demo questions
-cd ..
-```
-
-5. **Start development servers:**
-```bash
-# Terminal 1: Rails API
-cd backend
-rails server -p 4000
-
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-```
-
-**Access Points:**
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:4000
-- **Rails Console**: `cd backend && rails console`
-
-## 🎯 Quick Start
-
-1. **Start the application:**
-   ```bash
-   # Start Docker services
-   docker-compose up -d
-   
-   # Start backend (Terminal 1)
-   cd backend && rails server -p 4000
-   
-   # Start frontend (Terminal 2)
-   cd frontend && npm run dev
-   ```
-
-2. **Access the application:**
-   - Open http://localhost:3000
-   - Sign up for a new account
-
-3. **Create a coding session:**
-   - Create a new session from dashboard
-   - Share the session link with collaborators
-   - Start coding together in real-time
-   - Run code instantly with the execute button
-
-4. **Try interview mode:**
-   - Toggle interview mode
-   - Select a question from the bank
-   - Use the timer for timed practice
-
-## 📚 Key Features Explained
-
-### Real-Time Collaboration
-- Multiple users can edit the same file simultaneously
-- See other users' cursors with color indicators
-- User presence indicators show who's online
-- Changes sync instantly via WebSockets
-
-### Code Execution
-- Supports Python, JavaScript, Java, C++, Go, TypeScript, PHP, Ruby, Rust, Swift
-- Code runs securely via Judge0 API
-- View output, errors, and execution time
-- No Docker management needed
-
-### Session Management
-- Create unlimited coding sessions
-- Share sessions with simple URLs
-- View session history and saved code
-- Resume previous sessions anytime
-
-### Interview Mode
-- Pre-loaded coding questions (algorithms, data structures)
-- Built-in countdown timer
-- Mark sessions as interviews vs practice
-- Question difficulty indicators
-
-## 🎨 Available Pages
-
-- **`/`** - Homepage with feature overview
-- **`/auth/signin`** - User sign in
-- **`/auth/signup`** - User registration
-- **`/demo`** - Feature demo
-- **`/session/[id]`** - Coding collaboration session
-
-## 🔒 Security
-
-- JWT-based authentication
-- Secure WebSocket connections
-- Password hashing with bcrypt
-- Rate limiting with Rack::Attack
-- CORS protection
-
-## 🔧 Troubleshooting
-
-### Port Already in Use
-```bash
-# Kill process on port 3000 (frontend)
-lsof -ti:3000 | xargs kill -9
-
-# Kill process on port 4000 (backend)
-lsof -ti:4000 | xargs kill -9
-```
-
-### Database Connection Issues
-```bash
-# Check if PostgreSQL is running
-docker-compose ps postgres
-
-# Reset Rails database (WARNING: deletes all data)
-cd backend
-rails db:drop db:create db:migrate
-```
-
-### Frontend Not Loading
-```bash
-# Clear Next.js cache
-cd frontend
-rm -rf .next
-npm run dev
-```
-
-### Backend Not Starting
-```bash
-# Check Ruby version (need 3.2+)
-ruby --version
-
-# Reinstall dependencies
-cd backend
-bundle install
-```
-
-## 📊 Simplified Architecture
-
-**What we removed for simplicity:**
-- ❌ Y.js CRDT (using simple WebSocket broadcasts)
-- ❌ Docker code execution (using Judge0 API)
-- ❌ LiveKit/WebRTC video calls
-- ❌ AI interviewer features
-- ❌ Team workspaces & permissions
-- ❌ Session recording/playback
-- ❌ Whiteboard collaboration
-- ❌ External integrations
-- ❌ Sidekiq background jobs (optional)
-- ❌ Complex analytics
-
-**What we kept:**
-- ✅ Real-time collaborative editing
-- ✅ Code execution (via API)
-- ✅ Live chat
-- ✅ Session management
-- ✅ Interview mode basics
-
-## 📝 Development
-
-### Running Tests
-```bash
-# Backend tests
-cd backend
-bundle exec rspec
-
-# Frontend tests
-cd frontend
-npm test
-```
-
-### Code Quality
-```bash
-# Backend linting
-cd backend
-bundle exec rubocop
-
-# Frontend linting
-cd frontend
-npm run lint
-```
-
-## 📝 License
-
-Proprietary - All rights reserved
-
-## 🤝 Support
-
-For questions or issues, please open an issue on GitHub.
+Built so you don’t have to bounce between Zoom, a pastebin, and a separate IDE during a session.
 
 ---
 
-Built with ❤️ as a portfolio project
+## Features
+
+**Collaborative editor**  
+Monaco (same engine as VS Code). Multiple people edit the same file at once with live sync over ActionCable. Cursor and selection updates are broadcast so you can see where others are working.
+
+**Code execution**  
+Run code from the session UI or the in-app terminal (`run`). Supports JavaScript, TypeScript, Python, Java, C++, C, Go, Rust, Ruby, PHP, and Swift. Uses Judge0 when configured; otherwise the API falls back to local runtimes on the server.
+
+**Sessions**  
+Create collaboration, interview, or practice sessions. Share a link, invite by email, or join with an 8-character session code. Session list shows everything you’re part of.
+
+**Interview mode**  
+Timer, question bank (algorithms, data structures, system design, and more), HackerRank-style / Codeforces problem helpers, and run-against-test-cases flow for assessing solutions.
+
+**Chat**  
+In-session messaging with history and typing indicators over the same realtime channel as the editor.
+
+**Video**  
+LiveKit-backed multi-user video when keys are set; otherwise a local camera preview still works for solo checks.
+
+**Whiteboard**  
+Excalidraw for diagrams and system-design sketches during a session.
+
+**Terminal**  
+Lightweight in-session terminal: `help`, `clear`, `ls`, `pwd`, `echo`, and `run` (executes the current editor code).
+
+**Auth**  
+Email/password signup and login with JWT. Session and channel access require participation.
+
+---
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind, Monaco, Zustand |
+| Backend | Rails 7.2 API, PostgreSQL, Redis, ActionCable, JWT |
+| Execution | Judge0 (optional) or local Open3 fallbacks |
+| Video | LiveKit (optional) |
+| Whiteboard | Excalidraw |
+| Deploy | **Vercel** (frontend) + **Railway** (API, Postgres, Redis) |
+
+---
+
+## Local setup
+
+### Requirements
+
+- Node.js 18+
+- Ruby 3.1+ (3.1.4+ recommended)
+- Docker & Docker Compose (Postgres + Redis)
+- pnpm or npm
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/dawoodjaved/CodePair.git
+cd CodePair
+
+cd frontend && pnpm install && cd ..
+cd backend && bundle install && cd ..
+```
+
+### 2. Environment
+
+```bash
+cp .env.example .env.local
+# Fill JWT_SECRET and any optional LiveKit / Judge0 keys
+# Symlink or copy into frontend/.env.local and backend/.env as needed
+```
+
+Never commit `.env`, `.env.local`, or real API keys. Only `.env.example` (placeholders) belongs in git.
+
+### 3. Databases
+
+```bash
+docker compose up -d
+cd backend
+bundle exec rails db:create db:migrate db:seed
+```
+
+### 4. Run
+
+```bash
+# Terminal 1 — API (default often PORT from .env, e.g. 4004)
+cd backend && bundle exec rails server
+
+# Terminal 2 — UI
+cd frontend && pnpm dev
+```
+
+Open the frontend URL printed by Next.js (commonly `http://localhost:3005` or `3000`). Sign up, create a session, and share the join code with a second browser.
+
+---
+
+## How to use
+
+1. **Create a session** — title, type (collaboration / interview / practice), optional time limit and default language.  
+2. **Share** — copy link, session code, or invite by email. Guests join via `/join` with the code (must be signed in).  
+3. **Code together** — pick a language in the dropdown, edit, click **Run Code** or type `run` in the terminal.  
+4. **Interview** — open the Interview tab for timer, questions, and test runs.  
+5. **Video / whiteboard / chat** — use the matching tabs and sidebar during the session.
+
+---
+
+## Project layout
+
+```
+├── frontend/          # Next.js app (Vercel)
+├── backend/           # Rails API (Railway) + railway.toml
+├── scripts/           # Optional local import helpers (no catalog dumps in git)
+├── data/              # Local-only import artifacts (gitignored)
+├── docker-compose.yml
+├── .env.example
+├── DEPLOYMENT.md      # Railway + Vercel production guide
+└── README.md
+```
+
+HackerRank CSV/JSON catalogs and other large dumps are **gitignored**. Import them locally if you maintain a private question bank; do not push them to GitHub.
+
+---
+
+## API (high level)
+
+All routes live under `/api`. Highlights:
+
+- Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`
+- Sessions: CRUD, `POST /sessions/join`, participants, files, chat, executions
+- Questions & test cases for interview flows
+- `POST /livekit/token` when LiveKit is configured
+- Health: `GET /api/health`
+
+See `backend/config/routes.rb` for the full list.
+
+---
+
+## Deployment
+
+Production target: **frontend on Vercel**, **API + Postgres + Redis on Railway**.
+
+Full steps, env vars, and CORS setup: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+Before connecting Railway, push this repo to GitHub so the service can build from `backend/` (see `backend/railway.toml`).
+
+---
+
+## Troubleshooting
+
+**Ports in use** — free the frontend/API ports or change `PORT` / Next config.  
+**DB errors** — `docker compose ps` and ensure Postgres is healthy, then remigrate.  
+**WebSockets** — set `NEXT_PUBLIC_CABLE_URL` to `ws://…/cable` locally or `wss://…/cable` in production.  
+**Python run as Node error** — confirm the language dropdown is Python and the API received `language: "python"`.  
+**CORS in production** — Railway `CORS_ORIGINS` must include your exact Vercel origin.
+
+---
+
+## License
+
+Portfolio / proprietary project. Feel free to use it as inspiration for your own work.

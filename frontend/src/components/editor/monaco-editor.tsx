@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import * as Monaco from "monaco-editor";
+import { useEffect, useRef, useState, useCallback } from "react";
+import Editor from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 import { useSessionStore } from "@/store/session-store";
 
 interface MonacoEditorProps {
@@ -19,51 +20,87 @@ export function MonacoEditor({
   initialValue = "",
   onChange,
 }: MonacoEditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const { connectYjs, disconnectYjs } = useSessionStore();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const [userId, setUserId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+  const connectYjs = useSessionStore((s) => s.connectYjs);
+  const disconnectYjs = useSessionStore((s) => s.disconnectYjs);
+  const synced = useSessionStore((s) => s.fileContents.get(`${sessionId}:${fileId}`));
+  const seedValue = typeof synced === "string" ? synced : initialValue;
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const fetchUserInfo = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    // Initialize Monaco Editor
-    const editor = Monaco.editor.create(containerRef.current, {
-      value: initialValue,
-      language,
-      theme: "vs-dark",
-      automaticLayout: true,
-      minimap: { enabled: true },
-      fontSize: 14,
-      lineNumbers: "on",
-      roundedSelection: false,
-      scrollBeyondLastLine: false,
-      readOnly: false,
-      cursorStyle: "line",
-    });
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const response = await fetch(`${apiUrl}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    editorRef.current = editor;
+        if (response.ok) {
+          const userData = await response.json();
+          setUserId(userData.id?.toString() || userData.user?.id?.toString() || "");
+          setUserName(userData.name || userData.user?.name || "User");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
+      }
+    };
 
-    // Connect to Y.js for real-time collaboration
-    connectYjs(sessionId, fileId, editor);
+    fetchUserInfo();
+  }, []);
 
-    // Handle content changes
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      onChange?.(value);
-    });
+  const handleEditorDidMount = useCallback((ed: editor.IStandaloneCodeEditor) => {
+    editorRef.current = ed;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !editorRef.current || !userId || !fileId) return;
+
+    const ed = editorRef.current;
+    connectYjs(sessionId, fileId, ed, userId, userName || "User");
 
     return () => {
-      disconnectYjs(sessionId, fileId);
-      editor.dispose();
+      disconnectYjs(sessionId, fileId, ed);
     };
-  }, [sessionId, fileId, language, initialValue, onChange, connectYjs, disconnectYjs]);
+  }, [mounted, sessionId, fileId, userId, userName, connectYjs, disconnectYjs]);
 
+  const handleChange = useCallback(
+    (value: string | undefined) => {
+      onChange?.(value || "");
+    },
+    [onChange]
+  );
+
+  // Uncontrolled after mount (defaultValue) so React value props don't fight remote setValue.
+  // Remount when fileId changes via key on the parent or here.
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full"
-      style={{ minHeight: "400px" }}
-    />
+    <div className="h-full w-full">
+      <Editor
+        key={fileId}
+        height="100%"
+        language={language}
+        defaultValue={seedValue}
+        theme="vs-dark"
+        onChange={handleChange}
+        onMount={handleEditorDidMount}
+        options={{
+          automaticLayout: true,
+          minimap: { enabled: true },
+          fontSize: 14,
+          lineNumbers: "on",
+          roundedSelection: false,
+          scrollBeyondLastLine: false,
+          readOnly: false,
+          cursorStyle: "line",
+        }}
+      />
+    </div>
   );
 }
-

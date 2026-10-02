@@ -30,8 +30,8 @@ COPY --from=builder /app/public ./public
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 3005
 
-ENV PORT 3000
+ENV PORT 3005
 
 CMD ["node", "server.js"]

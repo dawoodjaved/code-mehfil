@@ -1,19 +1,22 @@
 class TestCase < ApplicationRecord
-  # Associations
   belongs_to :question
-  
-  # Validations
-  validates :input, presence: true
+
+  # Input may be empty (stdin-less problems); expected output is required.
   validates :expected_output, presence: true
-  
-  # Instance methods
+
+  before_create :generate_uuid
+
   def matches?(actual_output)
     normalize_output(actual_output) == normalize_output(expected_output)
   end
-  
+
   private
-  
+
+  def generate_uuid
+    self.id ||= SecureRandom.uuid
+  end
+
   def normalize_output(output)
-    output.to_s.strip.gsub(/\s+/, ' ')
+    output.to_s.strip.gsub(/\s+/, " ")
   end
 end

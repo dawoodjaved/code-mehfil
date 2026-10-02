@@ -38,7 +38,11 @@ export function SessionHistory({ workspaceId, onSelectSession }: SessionHistoryP
       if (searchQuery) params.append("search", searchQuery);
       if (tagFilter !== "all") params.append("tag", tagFilter);
 
-      const response = await fetch(`/api/sessions?${params}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const response = await fetch(`${apiUrl}/api/sessions?${params}`, { headers });
       const data = await response.json();
       setSessions(data);
     } catch (error) {

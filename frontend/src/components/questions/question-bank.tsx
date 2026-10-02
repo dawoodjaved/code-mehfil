@@ -5,70 +5,124 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 
-interface Question {
+export interface BankQuestion {
   id: string;
   title: string;
   description: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
+  difficulty: string;
   topics: string[];
-  testCases: number;
+  category?: string;
+  testCases?: number | any[];
+  templates?: Array<{ language: string; code: string }>;
+  starterCode?: Record<string, string>;
+  source?: string;
+  externalUrl?: string;
+  sourceMetadata?: Record<string, any>;
 }
 
 interface QuestionBankProps {
-  workspaceId?: string;
-  onSelectQuestion: (question: Question) => void;
-  onCreateQuestion: () => void;
+  onSelectQuestion: (question: BankQuestion) => void;
+  source?: string;
+  title?: string;
 }
 
-export function QuestionBank({ workspaceId, onSelectQuestion, onCreateQuestion }: QuestionBankProps) {
-  const [questions, setQuestions] = useState<Question[]>([]);
+function normalizeQuestion(q: any): BankQuestion {
+  const difficulty = String(q.difficulty || "medium").toLowerCase();
+  const topics = Array.isArray(q.topics)
+    ? q.topics
+    : q.category
+      ? [q.category]
+      : [];
+  const testCases = Array.isArray(q.testCases)
+    ? q.testCases.length
+    : Array.isArray(q.test_cases)
+      ? q.test_cases.length
+      : typeof q.testCases === "number"
+        ? q.testCases
+        : 0;
+
+  return {
+    id: String(q.id),
+    title: q.title || "Untitled",
+    description: q.description || "",
+    difficulty,
+    topics,
+    category: q.category,
+    testCases,
+    templates: q.templates,
+    starterCode: q.starterCode || q.starter_code,
+    source: q.source,
+    externalUrl: q.externalUrl || q.external_url,
+    sourceMetadata: q.sourceMetadata || q.source_metadata,
+  };
+}
+
+export function QuestionBank({
+  onSelectQuestion,
+  source = "internal",
+  title = "Question Bank",
+}: QuestionBankProps) {
+  const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
-  const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchQuestions();
-  }, [workspaceId, difficultyFilter, topicFilter]);
+  }, [difficultyFilter, source]);
 
   const fetchQuestions = async () => {
+    setLoading(true);
+    setError("");
     try {
       const params = new URLSearchParams();
-      if (workspaceId) params.append("workspaceId", workspaceId);
       if (difficultyFilter !== "all") params.append("difficulty", difficultyFilter);
+      if (source && source !== "all") params.append("source", source);
 
-      const response = await fetch(`/api/questions?${params}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const response = await fetch(`${apiUrl}/api/questions?${params}`, { headers });
+      if (!response.ok) throw new Error("Failed to load questions");
       const data = await response.json();
-      setQuestions(data);
-    } catch (error) {
-      console.error("Failed to fetch questions:", error);
+      const list = Array.isArray(data) ? data : [];
+      setQuestions(list.map(normalizeQuestion));
+    } catch (err) {
+      console.error("Failed to fetch questions:", err);
+      setError("Could not load question bank");
+      setQuestions([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const filteredQuestions = questions.filter((q) => {
-    const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDifficulty = difficultyFilter === "all" || q.difficulty === difficultyFilter;
-    const matchesTopic = topicFilter === "all" || q.topics.includes(topicFilter);
-    return matchesSearch && matchesDifficulty && matchesTopic;
+    const matchesDifficulty =
+      difficultyFilter === "all" ||
+      q.difficulty.toLowerCase() === difficultyFilter.toLowerCase();
+    return matchesSearch && matchesDifficulty;
   });
 
-  const allTopics = Array.from(new Set(questions.flatMap((q) => q.topics)));
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Question Bank</h2>
-        <Button onClick={onCreateQuestion}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Question
+    <div className="space-y-4 h-full overflow-y-auto p-1">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <Button variant="outline" size="sm" onClick={fetchQuestions} disabled={loading}>
+          Refresh
         </Button>
       </div>
 
-      <div className="flex gap-2">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="flex gap-2 flex-wrap">
+        <div className="flex-1 relative min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search questions..."
             value={searchQuery}
@@ -79,42 +133,36 @@ export function QuestionBank({ workspaceId, onSelectQuestion, onCreateQuestion }
         <select
           value={difficultyFilter}
           onChange={(e) => setDifficultyFilter(e.target.value)}
-          className="px-3 py-2 border rounded"
+          className="px-3 py-2 border rounded bg-background"
         >
           <option value="all">All Difficulties</option>
-          <option value="EASY">Easy</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HARD">Hard</option>
-        </select>
-        <select
-          value={topicFilter}
-          onChange={(e) => setTopicFilter(e.target.value)}
-          className="px-3 py-2 border rounded"
-        >
-          <option value="all">All Topics</option>
-          {allTopics.map((topic) => (
-            <option key={topic} value={topic}>
-              {topic}
-            </option>
-          ))}
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredQuestions.map((question) => (
           <Card
             key={question.id}
             className="cursor-pointer hover:border-primary transition"
             onClick={() => onSelectQuestion(question)}
           >
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm">{question.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 mb-2">
-                <Badge variant={question.difficulty === "EASY" ? "default" : question.difficulty === "MEDIUM" ? "secondary" : "destructive"}>
-                  {question.difficulty}
-                </Badge>
+              <div className="flex gap-2 mb-2 flex-wrap">
+                <Badge variant="secondary">{question.difficulty}</Badge>
+                {question.source ? (
+                  <Badge variant="outline" className="text-xs">
+                    {question.source}
+                  </Badge>
+                ) : null}
                 {question.topics.slice(0, 2).map((topic) => (
                   <Badge key={topic} variant="outline" className="text-xs">
                     {topic}
@@ -125,13 +173,20 @@ export function QuestionBank({ workspaceId, onSelectQuestion, onCreateQuestion }
                 {question.description}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                {question.testCases} test cases
+                {typeof question.testCases === "number"
+                  ? question.testCases
+                  : 0}{" "}
+                test cases
               </p>
             </CardContent>
           </Card>
         ))}
+        {!loading && filteredQuestions.length === 0 ? (
+          <p className="text-sm text-muted-foreground col-span-full">
+            No questions found. Seed the database or adjust filters.
+          </p>
+        ) : null}
       </div>
     </div>
   );
 }
-

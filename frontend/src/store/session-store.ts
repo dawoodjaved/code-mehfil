@@ -1,8 +1,5 @@
 import { create } from "zustand";
-import * as Y from "yjs";
-import { io, Socket } from "socket.io-client";
-import * as Monaco from "monaco-editor";
-import { WebsocketProvider } from "y-websocket";
+import { Monaco } from "@/lib/monaco-config";
 
 interface RemoteCursor {
   userId: string;
@@ -10,14 +7,21 @@ interface RemoteCursor {
   color: string;
   position: Monaco.Position;
   selection?: Monaco.Selection;
+  fileId?: string;
 }
 
+type EditorSet = Set<Monaco.editor.IStandaloneCodeEditor>;
+
 interface SessionState {
-  socket: Socket | null;
-  ydoc: Y.Doc | null;
-  providers: Map<string, WebsocketProvider>;
+  cable: WebSocket | null;
+  cableIdentifier: string | null;
+  connectedSessionId: string | null;
+  editors: Map<string, EditorSet>;
   remoteCursors: Map<string, RemoteCursor>;
   decorations: Map<string, string[]>;
+  onlineUsers: Map<string, { id: string; name: string; email?: string }>;
+  /** Latest known content per session:file — used when an editor mounts late */
+  fileContents: Map<string, string>;
   connectYjs: (
     sessionId: string,
     fileId: string,
@@ -25,16 +29,113 @@ interface SessionState {
     userId: string,
     userName: string
   ) => void;
-  disconnectYjs: (sessionId: string, fileId: string) => void;
+  disconnectYjs: (sessionId: string, fileId: string, editor?: Monaco.editor.IStandaloneCodeEditor) => void;
   broadcastCursor: (fileId: string, position: Monaco.Position, selection?: Monaco.Selection) => void;
+  getFileContent: (sessionId: string, fileId: string) => string | undefined;
+}
+
+const CURSOR_COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#a855f7", "#f59e0b", "#06b6d4"];
+
+function colorForUser(userId: string) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash + userId.charCodeAt(i) * 17) % CURSOR_COLORS.length;
+  return CURSOR_COLORS[hash];
+}
+
+function getApiUrl() {
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+}
+
+function getCableUrl() {
+  const explicit =
+    process.env.NEXT_PUBLIC_CABLE_URL ||
+    process.env.NEXT_PUBLIC_WS_URL;
+  if (explicit) return explicit;
+  const apiUrl = getApiUrl();
+  return apiUrl.replace(/^http/i, "ws").replace(/\/+$/, "") + "/cable";
+}
+
+function safeJsonParse<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function applyRemoteCursorDecorations(
+  editor: Monaco.editor.IStandaloneCodeEditor,
+  fileId: string,
+  cursors: Map<string, RemoteCursor>,
+  previousIds: string[]
+) {
+  const monaco = (window as any).monaco;
+  if (!monaco?.editor) return previousIds;
+
+  const forFile = [...cursors.values()].filter((c) => c.fileId === fileId && c.position);
+  const decorations = forFile.map((c) => {
+    const line = c.position.lineNumber || 1;
+    const col = c.position.column || 1;
+    return {
+      range: new monaco.Range(line, col, line, col),
+      options: {
+        className: "remote-cursor",
+        stickiness: 1,
+        hoverMessage: { value: c.userName || "Collaborator" },
+        beforeContentClassName: "remote-cursor-cap",
+        overviewRuler: {
+          color: c.color,
+          position: 4,
+        },
+        glyphMarginClassName: undefined,
+        inlineClassName: undefined,
+        after: {
+          content: ` ${c.userName || "•"}`,
+          inlineClassName: "remote-cursor-label",
+          cursorStops: null,
+        },
+      },
+    };
+  });
+
+  return editor.deltaDecorations(previousIds, decorations);
+}
+
+function setEditorValueRemote(editor: Monaco.editor.IStandaloneCodeEditor, content: string) {
+  if (editor.getValue() === content) return;
+  (editor as any).__isApplyingRemote = true;
+  try {
+    editor.setValue(content);
+  } finally {
+    setTimeout(() => {
+      (editor as any).__isApplyingRemote = false;
+    }, 0);
+  }
+}
+
+function applyContentToEditors(
+  editors: Map<string, EditorSet>,
+  key: string,
+  content: string
+) {
+  const set = editors.get(key);
+  if (!set) return;
+  set.forEach((ed) => setEditorValueRemote(ed, content));
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
-  socket: null,
-  ydoc: null,
-  providers: new Map(),
+  cable: null,
+  cableIdentifier: null,
+  connectedSessionId: null,
+  editors: new Map(),
   remoteCursors: new Map(),
   decorations: new Map(),
+  onlineUsers: new Map(),
+  fileContents: new Map(),
+
+  getFileContent: (sessionId, fileId) => {
+    return get().fileContents.get(`${sessionId}:${fileId}`);
+  },
 
   connectYjs: (
     sessionId: string,
@@ -43,162 +144,277 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     userId: string,
     userName: string
   ) => {
-    const { providers, socket } = get();
-
-    // Initialize socket if not exists
-    if (!socket) {
-      const newSocket = io(`${process.env.NEXT_PUBLIC_API_URL}/sessions`, {
-        auth: {
-          token: localStorage.getItem("token"),
-        },
-      });
-
-      newSocket.emit("join-session", { sessionId });
-
-      set({ socket: newSocket });
-    }
+    const { cable, cableIdentifier, connectedSessionId, editors, fileContents } = get();
 
     const docKey = `${sessionId}:${fileId}`;
+    const existing = editors.get(docKey) || new Set();
+    existing.add(editor);
+    editors.set(docKey, existing);
+    set({ editors: new Map(editors) });
 
-    // Create or get Y.js document
-    let ydoc = get().ydoc;
-    if (!ydoc) {
-      ydoc = new Y.Doc();
-      set({ ydoc });
+    // Apply any already-synced content for late-mounted editors
+    const cached = fileContents.get(docKey);
+    if (typeof cached === "string" && editor.getValue() !== cached) {
+      setEditorValueRemote(editor, cached);
     }
 
-    // Create WebSocket provider for real-time sync
-    const wsUrl = process.env.NEXT_PUBLIC_API_URL?.replace("http", "ws") || "ws://localhost:4000";
-    const provider = new WebsocketProvider(`${wsUrl}/yjs`, docKey, ydoc);
+    const token = localStorage.getItem("token") || "";
+    const cableUrlBase = getCableUrl();
+    const cableUrl = token
+      ? `${cableUrlBase}${cableUrlBase.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
+      : cableUrlBase;
+    const identifier = JSON.stringify({ channel: "SessionsChannel", session_id: sessionId });
 
-    providers.set(docKey, provider);
+    const ensureCable = () => {
+      if (
+        cable &&
+        (cable.readyState === WebSocket.OPEN || cable.readyState === WebSocket.CONNECTING) &&
+        connectedSessionId === sessionId &&
+        cableIdentifier === identifier
+      ) {
+        return;
+      }
 
-    // Get Y.js text type
-    const ytext = ydoc.getText("content");
+      if (cable && connectedSessionId && connectedSessionId !== sessionId) {
+        try {
+          cable.close();
+        } catch {
+          // ignore
+        }
+        set({ cable: null, cableIdentifier: null, connectedSessionId: null });
+      }
 
-    // Initialize content from Y.js
-    if (ytext.length === 0 && editor.getValue()) {
-      ytext.insert(0, editor.getValue());
-    } else if (ytext.length > 0) {
-      editor.setValue(ytext.toString());
-    }
+      const ws = new WebSocket(cableUrl);
+      set({ cable: ws, cableIdentifier: identifier, connectedSessionId: sessionId });
 
-    // Sync Y.js changes to Monaco
-    ytext.observe((event) => {
-      if (event.transaction.origin !== userId) {
-        const model = editor.getModel();
-        if (!model) return;
+      const send = (payload: any) => {
+        if (ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify(payload));
+      };
 
-        // Apply Y.js changes to Monaco
-        event.delta.forEach((delta) => {
-          if (delta.retain !== undefined) {
-            // Retain (no change)
+      ws.onopen = () => {
+        send({ command: "subscribe", identifier });
+      };
+
+      ws.onmessage = (event) => {
+        const data = typeof event.data === "string" ? safeJsonParse<any>(event.data) : null;
+        if (!data) return;
+        if (data.type === "welcome" || data.type === "ping" || data.type === "confirm_subscription") return;
+        if (!data.message) return;
+
+        const msg = data.message;
+
+        if (msg.type === "user_joined" && msg.user?.id) {
+          const next = new Map(get().onlineUsers);
+          next.set(String(msg.user.id), {
+            id: String(msg.user.id),
+            name: msg.user.name,
+            email: msg.user.email,
+          });
+          set({ onlineUsers: next });
+          return;
+        }
+
+        if (msg.type === "user_left" && msg.user?.id) {
+          const next = new Map(get().onlineUsers);
+          next.delete(String(msg.user.id));
+          set({ onlineUsers: next });
+          return;
+        }
+
+        if ((msg.type === "code_change" || msg.type === "code_sync") && msg.file_id) {
+          if (msg.type === "code_change" && msg.user_id?.toString?.() === userId?.toString?.()) {
+            // Still cache our own writes so late editors get them
+            const key = `${sessionId}:${msg.file_id}`;
+            const nextContents = new Map(get().fileContents);
+            nextContents.set(key, typeof msg.content === "string" ? msg.content : "");
+            set({ fileContents: nextContents });
+            return;
           }
-          if (delta.insert) {
-            const pos = model.getPositionAt(delta.retain || 0);
-            editor.executeEdits("yjs", [
-              {
-                range: new Monaco.Range(
-                  pos.lineNumber,
-                  pos.column,
-                  pos.lineNumber,
-                  pos.column
-                ),
-                text: delta.insert as string,
-              },
-            ]);
+
+          const key = `${sessionId}:${msg.file_id}`;
+          const incoming = typeof msg.content === "string" ? msg.content : "";
+          const nextContents = new Map(get().fileContents);
+          nextContents.set(key, incoming);
+          set({ fileContents: nextContents });
+          applyContentToEditors(get().editors, key, incoming);
+          return;
+        }
+
+        if (msg.type === "cursor_update" && msg.user_id && msg.position && msg.file_id) {
+          if (msg.user_id?.toString?.() === userId?.toString?.()) return;
+
+          const cursor: RemoteCursor = {
+            userId: msg.user_id.toString(),
+            userName: msg.user_name || "Anonymous",
+            color: colorForUser(String(msg.user_id)),
+            position: msg.position,
+            fileId: String(msg.file_id),
+          };
+
+          const next = new Map(get().remoteCursors);
+          next.set(cursor.userId, cursor);
+          set({ remoteCursors: next });
+
+          const key = `${sessionId}:${msg.file_id}`;
+          const targetSet = get().editors.get(key);
+          if (targetSet) {
+            targetSet.forEach((targetEditor) => {
+              const prev = get().decorations.get(key) || [];
+              const ids = applyRemoteCursorDecorations(targetEditor, String(msg.file_id), next, prev);
+              const dec = new Map(get().decorations);
+              dec.set(key, ids);
+              set({ decorations: dec });
+            });
           }
-          if (delta.delete) {
-            const startPos = model.getPositionAt(delta.retain || 0);
-            const endPos = model.getPositionAt((delta.retain || 0) + delta.delete);
-            editor.executeEdits("yjs", [
-              {
-                range: new Monaco.Range(
-                  startPos.lineNumber,
-                  startPos.column,
-                  endPos.lineNumber,
-                  endPos.column
-                ),
-                text: "",
-              },
-            ]);
-          }
-        });
+          return;
+        }
+      };
+    };
+
+    ensureCable();
+
+    // Avoid stacking listeners on reconnect / remount
+    const disposables: { dispose: () => void }[] = (editor as any).__collabDisposables || [];
+    disposables.forEach((d) => {
+      try {
+        d.dispose();
+      } catch {
+        // ignore
       }
     });
+    const nextDisposables: { dispose: () => void }[] = [];
 
-    // Sync Monaco changes to Y.js
-    let isApplyingYjs = false;
-    editor.onDidChangeModelContent((e) => {
-      if (isApplyingYjs) return;
+    nextDisposables.push(
+      editor.onDidChangeModelContent(() => {
+        if ((editor as any).__isApplyingRemote) return;
+        const content = editor.getValue();
 
-      const model = editor.getModel();
-      if (!model) return;
+        const nextContents = new Map(get().fileContents);
+        nextContents.set(docKey, content);
+        set({ fileContents: nextContents });
 
-      e.changes.forEach((change) => {
-        const startOffset = model.getOffsetAt(change.range.getStartPosition());
-        const endOffset = model.getOffsetAt(change.range.getEndPosition());
+        // Keep sibling editors (Code + Interview for same file) in sync locally
+        const siblings = get().editors.get(docKey);
+        siblings?.forEach((sib) => {
+          if (sib !== editor && sib.getValue() !== content) {
+            setEditorValueRemote(sib, content);
+          }
+        });
 
-        // Delete old text
-        if (endOffset > startOffset) {
-          ytext.delete(startOffset, endOffset - startOffset);
-        }
+        const activeCable = get().cable;
+        const activeId = get().cableIdentifier;
+        if (!activeCable || activeCable.readyState !== WebSocket.OPEN || !activeId) return;
 
-        // Insert new text
-        if (change.text) {
-          ytext.insert(startOffset, change.text);
-        }
-      });
-    });
+        activeCable.send(
+          JSON.stringify({
+            command: "message",
+            identifier: activeId,
+            data: JSON.stringify({
+              action: "code_change",
+              file_id: fileId,
+              content,
+              cursor_position: editor.getPosition(),
+              user_id: userId,
+              user_name: userName,
+            }),
+          })
+        );
+      })
+    );
 
-    // Handle cursor position changes
-    editor.onDidChangeCursorPosition((e) => {
-      get().broadcastCursor(fileId, e.position, editor.getSelection() || undefined);
-    });
+    nextDisposables.push(
+      editor.onDidChangeCursorPosition((e) => {
+        get().broadcastCursor(fileId, e.position, editor.getSelection() || undefined);
+      })
+    );
 
-    // Handle selection changes
-    editor.onDidChangeCursorSelection((e) => {
-      get().broadcastCursor(fileId, e.position, e.selection);
-    });
+    nextDisposables.push(
+      editor.onDidChangeCursorSelection((e) => {
+        const selection = e.selection;
+        const position = selection.getStartPosition();
+        get().broadcastCursor(fileId, position, selection);
+      })
+    );
 
-    set({ providers });
+    (editor as any).__collabDisposables = nextDisposables;
   },
 
   broadcastCursor: (fileId: string, position: Monaco.Position, selection?: Monaco.Selection) => {
-    const { socket } = get();
-    if (!socket) return;
+    const { cable, cableIdentifier, connectedSessionId } = get();
+    if (!cable || cable.readyState !== WebSocket.OPEN || !cableIdentifier || !connectedSessionId) return;
 
-    socket.emit("cursor-change", {
-      fileId,
-      position: {
-        lineNumber: position.lineNumber,
-        column: position.column,
-      },
-      selection: selection
-        ? {
-            startLineNumber: selection.startLineNumber,
-            startColumn: selection.startColumn,
-            endLineNumber: selection.endLineNumber,
-            endColumn: selection.endColumn,
-          }
-        : undefined,
-    });
+    const payload = {
+      command: "message",
+      identifier: cableIdentifier,
+      data: JSON.stringify({
+        action: "cursor_update",
+        file_id: fileId,
+        position: {
+          lineNumber: position.lineNumber,
+          column: position.column,
+        },
+        selection: selection
+          ? {
+              startLineNumber: selection.startLineNumber,
+              startColumn: selection.startColumn,
+              endLineNumber: selection.endLineNumber,
+              endColumn: selection.endColumn,
+            }
+          : undefined,
+      }),
+    };
+    try {
+      cable.send(JSON.stringify(payload));
+    } catch {
+      // ignore
+    }
   },
 
-  disconnectYjs: (sessionId: string, fileId: string) => {
-    const { socket, ydoc, providers } = get();
+  disconnectYjs: (sessionId: string, fileId: string, editor?: Monaco.editor.IStandaloneCodeEditor) => {
+    const { editors, decorations } = get();
     const docKey = `${sessionId}:${fileId}`;
+    const setForKey = editors.get(docKey);
 
-    const provider = providers.get(docKey);
-    if (provider) {
-      provider.destroy();
-      providers.delete(docKey);
+    if (setForKey && editor) {
+      const disposables: { dispose: () => void }[] = (editor as any).__collabDisposables || [];
+      disposables.forEach((d) => {
+        try {
+          d.dispose();
+        } catch {
+          // ignore
+        }
+      });
+      (editor as any).__collabDisposables = [];
+      setForKey.delete(editor);
+      if (setForKey.size === 0) {
+        editors.delete(docKey);
+      }
+      set({ editors: new Map(editors) });
+    } else if (setForKey) {
+      editors.delete(docKey);
+      set({ editors: new Map(editors) });
     }
 
-    if (socket) {
-      socket.emit("leave-session", { sessionId });
+    if (decorations.has(docKey) && (!setForKey || setForKey.size === 0)) {
+      decorations.delete(docKey);
+      set({ decorations: new Map(decorations) });
     }
 
-    set({ providers });
+    // Count remaining editors across all keys
+    let remaining = 0;
+    get().editors.forEach((s) => {
+      remaining += s.size;
+    });
+
+    if (remaining === 0) {
+      const { cable } = get();
+      try {
+        cable?.close();
+      } catch {
+        // ignore
+      }
+      set({ cable: null, cableIdentifier: null, connectedSessionId: null });
+    }
   },
 }));

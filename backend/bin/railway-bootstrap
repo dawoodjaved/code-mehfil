@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /app
+
+# ONE-TIME bootstrap only: wipes DB, migrates, seeds, then serves.
+# After a successful seed, set Railway startCommand to:
+#   bash bin/railway-start
+bundle exec rails runner "ActiveRecord::Base.connection.execute('DROP SCHEMA public CASCADE; CREATE SCHEMA public;')"
+bundle exec rails db:migrate
+bundle exec rails db:seed
+
+exec bundle exec puma -C config/puma.rb

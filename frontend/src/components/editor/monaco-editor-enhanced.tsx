@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as Monaco from "monaco-editor";
+import { Monaco } from "@/lib/monaco-config";
 import { useSessionStore } from "@/store/session-store";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Sparkles } from "lucide-react";
+import { useErrorLens, ErrorLensError } from "./error-lens";
 
 interface MonacoEditorEnhancedProps {
   sessionId: string;
@@ -33,6 +34,7 @@ export function MonacoEditorEnhanced({
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const [showAIChat, setShowAIChat] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Monaco.languages.CompletionItem[]>([]);
+  const [errors, setErrors] = useState<ErrorLensError[]>([]);
   const { connectYjs, disconnectYjs } = useSessionStore();
 
   useEffect(() => {

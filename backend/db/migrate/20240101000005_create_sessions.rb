@@ -3,7 +3,7 @@ class CreateSessions < ActiveRecord::Migration[7.2]
     create_table :sessions, id: :string do |t|
       t.string :title, null: false
       t.text :description
-      t.integer :type, default: 0 # COLLABORATION
+      t.integer :session_type, default: 0 # COLLABORATION
       t.integer :status, default: 0 # DRAFT
       t.string :workspace_id, index: true
       t.string :created_by_id, null: false, index: true
@@ -26,7 +26,7 @@ class CreateSessions < ActiveRecord::Migration[7.2]
       t.index :status
     end
     
-    add_foreign_key :sessions, :workspaces, column: :workspace_id, on_delete: :cascade
+    # workspace_id is optional; no workspaces table in this app
     add_foreign_key :sessions, :users, column: :created_by_id
   end
 end

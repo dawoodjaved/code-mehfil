@@ -10,7 +10,7 @@ class CreateQuestions < ActiveRecord::Migration[7.2]
       t.timestamps
     end
     
-    add_foreign_key :questions, :workspaces, column: :workspace_id, on_delete: :nullify
+    # workspace_id is optional; no workspaces table in this app
     add_foreign_key :questions, :users, column: :created_by_id, on_delete: :nullify
   end
 end
