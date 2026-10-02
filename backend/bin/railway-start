@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /app
+
+# Normal production start (does not wipe data)
+bundle exec rails db:migrate
+exec bundle exec puma -C config/puma.rb

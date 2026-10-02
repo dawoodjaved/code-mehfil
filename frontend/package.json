@@ -1,5 +1,5 @@
 {
-  "name": "@codepair/frontend",
+  "name": "@codemehfil/frontend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -26,6 +26,7 @@
     "clsx": "^2.0.0",
     "crypto-browserify": "^3.12.1",
     "framer-motion": "^10.16.16",
+    "livekit-client": "^2.9.1",
     "lucide-react": "^0.303.0",
     "monaco-editor": "^0.45.0",
     "next": "14.0.4",

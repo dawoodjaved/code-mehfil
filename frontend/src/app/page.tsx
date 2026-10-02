@@ -195,9 +195,19 @@ export default function HomePage() {
             </svg>
           </div>
           
-          <h1 className="text-6xl font-bold tracking-tight text-text-primary">
-            CodePair <span className="text-accent-red">2025</span>
-          </h1>
+          <div className="flex flex-col items-center gap-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="CodeMehfil"
+              width={88}
+              height={88}
+              className="rounded-[22px] shadow-[0_0_40px_rgba(255,0,51,0.35)]"
+            />
+            <h1 className="text-6xl font-bold tracking-tight text-text-primary">
+              CodeMehfil <span className="text-accent-red">2025</span>
+            </h1>
+          </div>
           <p className="text-2xl text-text-muted max-w-2xl mx-auto">
             The Definitive Real-Time Coding Collaboration & Interview Platform
           </p>
@@ -398,15 +408,15 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="text-text-primary">Video & Audio</CardTitle>
               <CardDescription className="text-text-muted">
-                Live video calls and audio communication integrated into sessions
+                In-session camera and mic preview; LiveKit room tokens when configured
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="text-sm text-text-muted space-y-1">
-                <li>• LiveKit integration</li>
-                <li>• Video/audio controls</li>
-                <li>• Screen sharing ready</li>
-                <li>• Multiple participants</li>
+                <li>• Local camera / mic controls</li>
+                <li>• LiveKit token endpoint ready</li>
+                <li>• Room name tied to session</li>
+                <li>• Falls back gracefully without LiveKit</li>
               </ul>
             </CardContent>
           </Card>
@@ -432,15 +442,15 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="text-text-primary">Interactive Whiteboard</CardTitle>
               <CardDescription className="text-text-muted">
-                Collaborative drawing and diagramming with Excalidraw
+                Excalidraw whiteboard synced over ActionCable
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="text-sm text-text-muted space-y-1">
-                <li>• Real-time collaborative drawing</li>
+                <li>• Collaborative drawing sync</li>
                 <li>• Export as PNG or Excalidraw</li>
                 <li>• Multiple drawing tools</li>
-                <li>• Synchronized across users</li>
+                <li>• Live when peers are connected</li>
               </ul>
             </CardContent>
           </Card>
@@ -537,7 +547,7 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="text-text-primary">Live Chat</CardTitle>
               <CardDescription className="text-text-muted">
-                Real-time messaging with typing indicators
+                Real-time messaging with typing indicators and @mentions
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -545,7 +555,7 @@ export default function HomePage() {
                 <li>• Instant messaging</li>
                 <li>• Typing indicators</li>
                 <li>• Message history</li>
-                <li>• User mentions</li>
+                <li>• @user mentions</li>
               </ul>
             </CardContent>
           </Card>

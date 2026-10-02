@@ -1,5 +1,7 @@
 module Api
   class ExecutionsController < ApplicationController
+    include SessionAccess
+
     before_action :set_session, only: [:create]
     
     def index
@@ -9,10 +11,21 @@ module Api
     
     def show
       execution = Execution.find(params[:id])
+      allowed =
+        execution.user_id == current_user.id ||
+        (execution.respond_to?(:session) && execution.session&.is_participant?(current_user))
+
+      unless allowed
+        render json: { error: "Access denied" }, status: :forbidden
+        return
+      end
+
       render json: execution
     end
     
     def create
+      return if performed?
+
       execution = @session.executions.build(
         user: current_user,
         code: params[:code],
@@ -30,8 +43,8 @@ module Api
           
           # Check if Judge0 is configured
           if !service.configured?
-            # Use fallback execution
-            result = execute_code_fallback(execution)
+            # Use fallback execution — use request language so we run with the client-selected language
+            result = execute_code_fallback(execution, request_language: params[:language])
             if result[:success]
               execution.mark_completed(
                 output: result[:output] || "",
@@ -60,19 +73,20 @@ module Api
     private
     
     def set_session
-      @session = Session.find(params[:session_id])
-      
-      unless @session.is_participant?(current_user)
-        render json: { error: 'Access denied' }, status: :forbidden
-      end
+      load_session_from_params!
+      require_session_participant!
     rescue ActiveRecord::RecordNotFound
-      render json: { error: 'Session not found' }, status: :not_found
+      render json: { error: "Session not found" }, status: :not_found
     end
     
-    def execute_code_fallback(execution)
-      # Get language name (handles both integer and string)
-      language_name = execution.language_name.downcase
-      
+    def execute_code_fallback(execution, request_language: nil)
+      # Prefer the language from the request (what the client sent); otherwise use the saved execution's language
+      language_name = if request_language.present?
+        request_language.to_s.downcase.strip
+      else
+        execution.language_name.to_s.downcase
+      end
+
       # Simple fallback execution for common languages
       case language_name
       when 'javascript', 'typescript'

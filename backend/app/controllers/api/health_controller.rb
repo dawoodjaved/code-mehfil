@@ -6,7 +6,7 @@ module Api
       render json: {
         status: 'ok',
         timestamp: Time.current,
-        service: 'CodePair API',
+        service: 'CodeMehfil API',
         version: '1.0.0'
       }
     end

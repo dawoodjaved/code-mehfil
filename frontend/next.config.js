@@ -3,7 +3,7 @@ const webpack = require("webpack");
 
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@codepair/ui"],
+  transpilePackages: ["@codemehfil/ui"],
   webpack: (config, { isServer }) => {
     // Polyfills for Node.js modules used by yjs and y-websocket
     if (!isServer) {

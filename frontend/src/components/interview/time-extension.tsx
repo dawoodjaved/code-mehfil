@@ -13,9 +13,13 @@ interface TimeExtensionProps {
 export function TimeExtension({ sessionId, currentTime, onExtend, canExtend }: TimeExtensionProps) {
   const handleExtend = async (minutes: number) => {
     try {
-      await fetch(`/api/sessions/${sessionId}/extend-time`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      await fetch(`${apiUrl}/api/sessions/${sessionId}/extend_time`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ minutes }),
       });
       onExtend(minutes);

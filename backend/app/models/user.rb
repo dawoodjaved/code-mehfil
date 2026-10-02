@@ -24,6 +24,8 @@ class User < ApplicationRecord
   end
   
   def update_last_seen!
+    return unless self.class.column_names.include?("last_seen_at")
+
     update_column(:last_seen_at, Time.current)
   end
   

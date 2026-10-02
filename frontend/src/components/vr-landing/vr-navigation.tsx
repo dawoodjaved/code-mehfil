@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface VRNavigationProps {
   activeNav: string;
@@ -21,13 +22,17 @@ export function VRNavigation({ activeNav, setActiveNav }: VRNavigationProps) {
       }}
     >
       <div className="container mx-auto h-full flex items-center justify-between px-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent-red flex items-center justify-center">
-            <div className="w-5 h-5 bg-white rounded-sm" />
-          </div>
-          <span className="text-white text-xl font-semibold">Logoipsum</span>
-        </div>
+          <Link href="/sessions" className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="CodeMehfil"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-xl shadow-[0_0_20px_rgba(255,0,51,0.35)]"
+            />
+            <span className="text-white text-xl font-semibold tracking-tight">CodeMehfil</span>
+          </Link>
 
         {/* Navigation Items */}
         <div className="flex items-center gap-10">

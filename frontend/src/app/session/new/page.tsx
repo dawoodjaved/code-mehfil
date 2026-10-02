@@ -9,8 +9,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Code, Users, Clock, Tag } from "lucide-react";
 import { BlurOrbs } from "@/components/vr-landing/blur-orbs";
+import { SUPPORTED_LANGUAGES } from "@/lib/languages";
+import { AppNav } from "@/components/dashboard/app-nav";
+import { RequireAuth } from "@/components/auth/require-auth";
 
 export default function NewSessionPage() {
+  return (
+    <RequireAuth next="/session/new">
+      <NewSessionForm />
+    </RequireAuth>
+  );
+}
+
+function NewSessionForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +45,7 @@ export default function NewSessionPage() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        router.push("/auth/signin");
+        router.push("/auth/signin?next=/session/new");
         return;
       }
 
@@ -61,6 +72,7 @@ export default function NewSessionPage() {
               ? parseInt(formData.time_limit_minutes.trim())
               : null,
             tags: tagsArray,
+            default_language: formData.language,
           },
         }),
       });
@@ -90,20 +102,19 @@ export default function NewSessionPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-bg-primary overflow-hidden p-4">
-      {/* Background Blur Orbs */}
+    <div className="relative min-h-screen bg-bg-primary overflow-hidden">
       <BlurOrbs />
-      
-      {/* Optional Grid Pattern */}
+      <AppNav />
+
       <div 
-        className="fixed inset-0 opacity-[0.02] pointer-events-none z-background"
+        className="fixed inset-0 opacity-[0.02] pointer-events-none z-0"
         style={{
           backgroundImage: `radial-gradient(circle, rgba(255,255,255,1) 1px, transparent 1px)`,
           backgroundSize: "30px 30px",
         }}
       />
 
-      <div className="container mx-auto max-w-4xl py-8 relative z-cards">
+      <div className="container mx-auto max-w-4xl py-8 px-4 relative z-cards">
         <div className="flex flex-col md:flex-row items-start gap-8">
           {/* Illustration Side - 3D Vector */}
           <div className="hidden md:flex flex-1 justify-center items-center sticky top-8">
@@ -258,13 +269,11 @@ export default function NewSessionPage() {
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-bg-card border-[rgba(255,255,255,0.1)] rounded-md text-text-primary focus:border-accent-red focus:outline-none"
                   >
-                    <option value="javascript">JavaScript</option>
-                    <option value="typescript">TypeScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                    <option value="cpp">C++</option>
-                    <option value="rust">Rust</option>
-                    <option value="go">Go</option>
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

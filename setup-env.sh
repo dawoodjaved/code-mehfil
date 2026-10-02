@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# CodePair - Environment Setup Script
+# CodeMehfil - Environment Setup Script
 # This script creates .env files for backend and frontend with default values
 
-echo "🚀 Setting up CodePair environment files..."
+echo "🚀 Setting up CodeMehfil environment files..."
 
 # Backend .env
 echo "📝 Creating backend/.env..."
 cat > backend/.env << 'EOF'
 # Database Configuration
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codepair_development
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codemehfil_development
 
 # Redis Configuration
 REDIS_URL=redis://localhost:6379/1
@@ -52,4 +52,4 @@ echo "   2. Set up database: cd backend && rails db:create db:migrate db:seed"
 echo "   3. Start backend: cd backend && rails server -p 4000"
 echo "   4. Start frontend: cd frontend && npm run dev"
 echo ""
-echo "🎉 Happy coding with CodePair!"
+echo "🎉 Happy coding with CodeMehfil!"
