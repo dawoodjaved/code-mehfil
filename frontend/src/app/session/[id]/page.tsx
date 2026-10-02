@@ -636,8 +636,10 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/sessions"
-              className="shrink-0 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
+              className="shrink-0 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" width={22} height={22} className="rounded-md" />
               CodeMehfil
             </Link>
             <span className="text-muted-foreground/40">/</span>

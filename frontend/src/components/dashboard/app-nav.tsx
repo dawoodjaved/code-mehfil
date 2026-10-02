@@ -7,31 +7,14 @@ import { LogOut, Plus, LogIn } from "lucide-react";
 
 function BrandMark({ className = "" }: { className?: string }) {
   return (
-    <svg
-      width="36"
-      height="36"
-      viewBox="0 0 36 36"
-      className={className}
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="cmBrand" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ff0033" />
-          <stop offset="100%" stopColor="#00d4ff" />
-        </linearGradient>
-      </defs>
-      <rect width="36" height="36" rx="10" fill="url(#cmBrand)" opacity="0.95" />
-      <path
-        d="M10 18c0-4 3-7 8-7s8 3 8 7-3 7-8 7c-1.5 0-2.8-.3-4-.8"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <circle cx="14" cy="16.5" r="1.4" fill="#fff" />
-      <circle cx="18" cy="16.5" r="1.4" fill="#fff" />
-      <circle cx="22" cy="16.5" r="1.4" fill="#fff" />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo.png"
+      alt="CodeMehfil"
+      width={36}
+      height={36}
+      className={`rounded-[10px] ${className}`}
+    />
   );
 }
 

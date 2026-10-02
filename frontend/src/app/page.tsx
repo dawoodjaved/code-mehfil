@@ -195,9 +195,19 @@ export default function HomePage() {
             </svg>
           </div>
           
-          <h1 className="text-6xl font-bold tracking-tight text-text-primary">
-            CodeMehfil <span className="text-accent-red">2025</span>
-          </h1>
+          <div className="flex flex-col items-center gap-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="CodeMehfil"
+              width={88}
+              height={88}
+              className="rounded-[22px] shadow-[0_0_40px_rgba(255,0,51,0.35)]"
+            />
+            <h1 className="text-6xl font-bold tracking-tight text-text-primary">
+              CodeMehfil <span className="text-accent-red">2025</span>
+            </h1>
+          </div>
           <p className="text-2xl text-text-muted max-w-2xl mx-auto">
             The Definitive Real-Time Coding Collaboration & Interview Platform
           </p>

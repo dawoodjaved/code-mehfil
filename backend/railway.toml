@@ -1,10 +1,9 @@
 # CodeMehfil Rails API — Railway service config
-# In Railway: set Root Directory to `backend` (or deploy this folder as the service root).
-# Docs: https://docs.railway.com/guides/rails
+# Deploy from the `backend` directory (or set Root Directory = backend).
 
 [build]
-builder = "NIXPACKS"
-buildCommand = "bundle install"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "bundle exec puma -C config/puma.rb"
