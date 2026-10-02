@@ -3,11 +3,11 @@ version: "3.8"
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: codepair-postgres
+    container_name: codemehfil-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: codepair
+      POSTGRES_DB: codemehfil
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: codepair-redis
+    container_name: codemehfil-redis
     ports:
       - "6379:6379"
     volumes:
@@ -31,22 +31,36 @@ services:
       timeout: 5s
       retries: 5
 
+  # Local LiveKit for multi-user video (dev keys: API key=devkey, secret=secret)
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: codemehfil-livekit
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: codepair-backend
+    container_name: codemehfil-backend
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/codepair_development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/codemehfil_development
       REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
       PORT: 4000
       JUDGE0_API_URL: https://judge0-ce.p.rapidapi.com
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      LIVEKIT_URL: ws://localhost:7880
     depends_on:
       - postgres
       - redis
+      - livekit
     volumes:
       - ./backend:/app
     command: rails server -b 0.0.0.0 -p 4000
@@ -55,7 +69,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: codepair-frontend
+    container_name: codemehfil-frontend
     ports:
       - "3005:3005"
     environment:

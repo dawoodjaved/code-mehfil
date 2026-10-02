@@ -1,4 +1,7 @@
-# CodePair - Render Blueprint
+# DEPRECATED: Prefer Railway + Vercel (see DEPLOYMENT.md and backend/railway.toml).
+# This Render Blueprint is kept only as a fallback reference.
+#
+# CodeMehfil - Render Blueprint
 # Deploy: Connect this repo to Render and use "New Blueprint" to deploy
 # Docs: https://render.com/docs/blueprint-spec
 
@@ -6,7 +9,7 @@ services:
   # Rails API Backend
   - type: web
     runtime: ruby
-    name: codepair-backend
+    name: codemehfil-backend
     rootDir: backend
     plan: free
 
@@ -21,17 +24,17 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: codepair-db
+          name: codemehfil-db
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: keyvalue
-          name: codepair-redis
+          name: codemehfil-redis
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
       # Add your Vercel URL(s) after deploying frontend (comma-separated for multiple)
-      # Example: https://codepair.vercel.app,https://codepair-xxx.vercel.app
+      # Example: https://codemehfil.vercel.app,https://codemehfil-xxx.vercel.app
       - key: CORS_ORIGINS
         sync: false
       # Optional: Judge0 API for code execution (get key from rapidapi.com)
@@ -42,7 +45,7 @@ services:
 
   # Redis (for ActionCable WebSockets)
   - type: keyvalue
-    name: codepair-redis
+    name: codemehfil-redis
     plan: free
     ipAllowList:
       - source: 0.0.0.0/0
@@ -50,6 +53,6 @@ services:
     maxmemoryPolicy: noeviction
 
 databases:
-  - name: codepair-db
+  - name: codemehfil-db
     plan: free
-    databaseName: codepair_production
+    databaseName: codemehfil_production

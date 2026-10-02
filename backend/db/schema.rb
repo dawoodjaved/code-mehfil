@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -18,8 +18,8 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
     t.string "session_id", null: false
     t.string "user_id", null: false
     t.text "content", null: false
-    t.string "type", default: "TEXT"
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
+    t.integer "message_type", default: 0, null: false
     t.index ["session_id"], name: "idx_chat_messages_session"
     t.index ["user_id"], name: "idx_chat_messages_user"
   end
@@ -52,7 +52,20 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
     t.string "created_by_id", null: false
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
+    t.integer "category", default: 0, null: false
+    t.jsonb "starter_code", default: {}
+    t.text "solution"
+    t.integer "time_limit_minutes"
+    t.text "tags", default: [], array: true
+    t.string "source", default: "internal", null: false
+    t.string "external_id"
+    t.string "external_url"
+    t.jsonb "source_metadata", default: {}
+    t.index ["category"], name: "index_questions_on_category"
     t.index ["created_by_id"], name: "idx_questions_created_by"
+    t.index ["difficulty"], name: "index_questions_on_difficulty"
+    t.index ["source", "external_id"], name: "index_questions_on_source_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["source"], name: "index_questions_on_source"
   end
 
   create_table "session_files", id: :string, force: :cascade do |t|
@@ -60,10 +73,11 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
     t.string "path", null: false
     t.string "filename"
     t.text "content"
-    t.integer "language", null: false
     t.string "created_by_id"
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
+    t.string "last_modified_by_id"
+    t.string "language", null: false
     t.index ["session_id"], name: "idx_session_files_session"
     t.unique_constraint ["session_id", "path"], name: "session_files_session_id_path_key"
   end
@@ -71,7 +85,6 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
   create_table "session_participants", id: :string, force: :cascade do |t|
     t.string "session_id", null: false
     t.string "user_id", null: false
-    t.string "role", default: "PARTICIPANT"
     t.datetime "joined_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.datetime "left_at", precision: nil
     t.boolean "video_enabled", default: false
@@ -83,6 +96,8 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
     t.jsonb "cursor_position"
+    t.datetime "last_seen_at"
+    t.integer "role", default: 0, null: false
   end
 
   create_table "session_questions", id: :string, force: :cascade do |t|
@@ -115,6 +130,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_01_01_000022) do
     t.text "tags", default: [], array: true
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
+    t.string "default_language", default: "javascript"
     t.index ["code"], name: "idx_sessions_code"
     t.index ["created_by_id"], name: "idx_sessions_created_by"
     t.index ["status"], name: "idx_sessions_status"

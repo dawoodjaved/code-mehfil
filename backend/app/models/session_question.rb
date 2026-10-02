@@ -1,24 +1,28 @@
 class SessionQuestion < ApplicationRecord
-  # Associations
   belongs_to :session
   belongs_to :question
-  
-  # Validations
+
   validates :question_id, uniqueness: { scope: :session_id }
-  
-  # Enums
-  enum status: { pending: 0, in_progress: 1, completed: 2, skipped: 3 }
-  
-  # Instance methods
-  def mark_completed(time_taken_seconds = nil)
-    update!(
-      status: :completed,
-      completed_at: Time.current,
-      time_taken_seconds: time_taken_seconds
-    )
+
+  before_create :generate_uuid
+
+  # Schema only has assigned_at / completed_at — keep helpers without a status column.
+  def mark_completed(_time_taken_seconds = nil)
+    update!(completed_at: Time.current)
   end
-  
+
   def mark_in_progress
-    update!(status: :in_progress, started_at: Time.current)
+    # No started_at column in schema; keep method for API compatibility.
+    touch if persisted?
+  end
+
+  def completed?
+    completed_at.present?
+  end
+
+  private
+
+  def generate_uuid
+    self.id ||= SecureRandom.uuid
   end
 end

@@ -1,5 +1,7 @@
 module Api
   class ExecutionsController < ApplicationController
+    include SessionAccess
+
     before_action :set_session, only: [:create]
     
     def index
@@ -9,10 +11,21 @@ module Api
     
     def show
       execution = Execution.find(params[:id])
+      allowed =
+        execution.user_id == current_user.id ||
+        (execution.respond_to?(:session) && execution.session&.is_participant?(current_user))
+
+      unless allowed
+        render json: { error: "Access denied" }, status: :forbidden
+        return
+      end
+
       render json: execution
     end
     
     def create
+      return if performed?
+
       execution = @session.executions.build(
         user: current_user,
         code: params[:code],
@@ -60,13 +73,10 @@ module Api
     private
     
     def set_session
-      @session = Session.find(params[:session_id])
-      
-      unless @session.is_participant?(current_user)
-        render json: { error: 'Access denied' }, status: :forbidden
-      end
+      load_session_from_params!
+      require_session_participant!
     rescue ActiveRecord::RecordNotFound
-      render json: { error: 'Session not found' }, status: :not_found
+      render json: { error: "Session not found" }, status: :not_found
     end
     
     def execute_code_fallback(execution, request_language: nil)

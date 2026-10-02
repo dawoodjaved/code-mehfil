@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# CodePair - Quick Start Script
-# This script will set up and start your CodePair backend
+# CodeMehfil - Quick Start Script
+# This script will set up and start your CodeMehfil backend
 
 set -e  # Exit on error
 
-echo "🚀 CodePair - Quick Start Script"
+echo "🚀 CodeMehfil - Quick Start Script"
 echo "================================"
 echo ""
 
@@ -69,7 +69,7 @@ echo -e "${YELLOW}⚙️  Step 3: Setting up environment...${NC}"
 if [ ! -f ".env" ]; then
     echo "Creating .env file..."
     cat > .env << EOF
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codepair_development
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codemehfil_development
 REDIS_URL=redis://localhost:6379/1
 JWT_SECRET=$(openssl rand -hex 32)
 JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
@@ -107,7 +107,7 @@ echo ""
 echo -e "${GREEN}✅ Setup complete!${NC}"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "${GREEN}🎉 CodePair Backend is Ready!${NC}"
+echo -e "${GREEN}🎉 CodeMehfil Backend is Ready!${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📝 To start the server:"

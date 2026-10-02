@@ -1,131 +1,110 @@
 # Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 .pnpm-store/
-
-# Next.js
-.next/
-out/
-build/
-dist/
-*.tsbuildinfo
-next-env.d.ts
-
-# Turbo
-.turbo/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
-
-# Rails / Ruby
-*.gem
-*.rbc
-/.config
-/coverage/
-/InstalledFiles
-/pkg/
-/spec/reports/
-/spec/examples.txt
-/test/tmp/
-/test/version_tmp/
-/tmp/
-*.bundle
-vendor/bundle
-lib/bundler/man/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-*.xcworkspace
-!default.xcworkspace
-*.xccheckout
-*.moved-aside
-DerivedData
-*.hmap
-*.ipa
-*.xcuserstate
-project.xcworkspace
-
-# Rails specific
-*.sqlite3
-*.sqlite3-journal
-*.sqlite
-/db/*.sqlite3
-/db/*.sqlite3-journal
-/log/*
-!/log/.keep
-/tmp/*
-!/tmp/.keep
-/storage/*
-!/storage/.keep
-/public/assets
-.byebug_history
-capybara-*.html
-.rspec
-/.bundle
-/vendor/bundle
-/lib/bundler/man/
-*.swp
-*~
-.project
-.classpath
-.settings/
-.loadpath
-.recommenders
-
-# RSpec / Testing
-/coverage/
-/spec/tmp/
-*.orig
-rerun.txt
-pickle-email-*.html
-
-# SimpleCov
-coverage/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-logs/
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# IDEs and editors
-.idea/
-.vscode/
+# Next.js / frontend build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+.vercel
+.netlify
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.npm
+*.tgz
+
+# Environment & secrets — never commit real values
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env*
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+**/config/master.key
+**/config/credentials/*.key
+**/local_secret.txt
+**/secret.txt
+**/secrets/
+*.credentials.json
+service-account*.json
+
+# Backup / editor junk
+*.bak
+*.backup
+*~
 *.swp
 *.swo
-*~
-.DS_Store
-.project
-.classpath
-.settings/
-.loadpath
-.recommenders
+*.orig
+
+# Large / third-party data dumps (import locally; do not push catalogs)
+*.csv
+*.tsv
+data/**
+!data/.gitignore
+**/hackerrank_challenges*
+**/hackerrank*.json
+**/hackerrank*.csv
+
+# Unrelated personal portfolio assets (not part of this app)
+portfolio-data-updated.js
+portfolio-data*.js
+
+# Rails / Ruby runtime
+*.gem
+*.rbc
+/.bundle
+/vendor/bundle
+vendor/bundle
+*.sqlite3
+*.sqlite3-journal
+*.sqlite
+*.db
+/log/*
+!/log/.keep
+**/log/*.log
+backend/log/
+/tmp/
+**/tmp/
+!**/tmp/.keep
+/storage/*
+!/storage/.keep
+/public/assets
+.byebug_history
+capybara-*.html
+.rspec
+coverage/
+/spec/reports/
+/spec/tmp/
+/spec/examples.txt
+rerun.txt
+pickle-email-*.html
+dump.rdb
+.sass-cache/
+connect.lock
+/spring/*.pid
+/tmp/bootsnap*
+
+# OS / IDE
+.idea/
+.vscode/
 *.sublime-project
 *.sublime-workspace
 *.code-workspace
-
-# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -134,76 +113,20 @@ lerna-debug.log*
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+.ruby-lsp/
 
-# Docker
-.dockerignore
+# Docker local overrides
 docker-compose.override.yml
 
-# Misc
-*.pem
-*.key
-*.cert
-.cache/
-.parcel-cache/
-.vercel
-.netlify
-
-# TypeScript
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env.development
-.env.production
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
+# Yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+.yarn-integrity
 
-# Spring (Rails)
-/spring/*.pid
-
-# Bootsnap (Rails)
-/tmp/bootsnap*
-
-# Pundit
-.sass-cache/
-connect.lock
+# Optional REPL / tooling
+.node_repl_history
+.vscode-test
 typings/
-
-# Redis
-dump.rdb
-
-# Backup files
-*.bak
-*.backup
-*~

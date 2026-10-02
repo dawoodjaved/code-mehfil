@@ -21,11 +21,14 @@ export function MonacoEditor({
   onChange,
 }: MonacoEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const [userId, setUserId] = useState<string>("anonymous");
-  const [userName, setUserName] = useState<string>("Anonymous User");
-  const { connectYjs, disconnectYjs } = useSessionStore();
+  const [userId, setUserId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+  const connectYjs = useSessionStore((s) => s.connectYjs);
+  const disconnectYjs = useSessionStore((s) => s.disconnectYjs);
+  const synced = useSessionStore((s) => s.fileContents.get(`${sessionId}:${fileId}`));
+  const seedValue = typeof synced === "string" ? synced : initialValue;
 
-  // Fetch user info on mount
   useEffect(() => {
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("token");
@@ -41,8 +44,8 @@ export function MonacoEditor({
 
         if (response.ok) {
           const userData = await response.json();
-          setUserId(userData.id?.toString() || userData.user?.id?.toString() || "anonymous");
-          setUserName(userData.name || userData.user?.name || "Anonymous User");
+          setUserId(userData.id?.toString() || userData.user?.id?.toString() || "");
+          setUserName(userData.name || userData.user?.name || "User");
         }
       } catch (error) {
         console.error("Failed to fetch user info:", error);
@@ -52,26 +55,22 @@ export function MonacoEditor({
     fetchUserInfo();
   }, []);
 
-  // Handle editor mount
-  const handleEditorDidMount = useCallback(
-    (editor: editor.IStandaloneCodeEditor) => {
-      editorRef.current = editor;
-    },
-    []
-  );
+  const handleEditorDidMount = useCallback((ed: editor.IStandaloneCodeEditor) => {
+    editorRef.current = ed;
+    setMounted(true);
+  }, []);
 
-  // Connect to Y.js when both editor and user info are ready
   useEffect(() => {
-    if (!editorRef.current || !userId || !userName || userId === "anonymous") return;
-    
-    connectYjs(sessionId, fileId, editorRef.current, userId, userName);
-    
-    return () => {
-      disconnectYjs(sessionId, fileId);
-    };
-  }, [sessionId, fileId, userId, userName, connectYjs, disconnectYjs]);
+    if (!mounted || !editorRef.current || !userId || !fileId) return;
 
-  // Handle value changes
+    const ed = editorRef.current;
+    connectYjs(sessionId, fileId, ed, userId, userName || "User");
+
+    return () => {
+      disconnectYjs(sessionId, fileId, ed);
+    };
+  }, [mounted, sessionId, fileId, userId, userName, connectYjs, disconnectYjs]);
+
   const handleChange = useCallback(
     (value: string | undefined) => {
       onChange?.(value || "");
@@ -79,12 +78,15 @@ export function MonacoEditor({
     [onChange]
   );
 
+  // Uncontrolled after mount (defaultValue) so React value props don't fight remote setValue.
+  // Remount when fileId changes via key on the parent or here.
   return (
     <div className="h-full w-full">
       <Editor
+        key={fileId}
         height="100%"
         language={language}
-        value={initialValue}
+        defaultValue={seedValue}
         theme="vs-dark"
         onChange={handleChange}
         onMount={handleEditorDidMount}
@@ -102,4 +104,3 @@ export function MonacoEditor({
     </div>
   );
 }
-

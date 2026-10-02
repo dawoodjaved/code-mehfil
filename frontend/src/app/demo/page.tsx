@@ -77,7 +77,7 @@ export default function DemoPage() {
           </div>
           
           <h1 className="text-5xl font-bold tracking-tight text-text-primary">
-            CodePair <span className="text-accent-red">Demo</span>
+            CodeMehfil <span className="text-accent-red">Demo</span>
           </h1>
           <p className="text-xl text-text-muted max-w-2xl mx-auto">
             Experience the future of real-time coding collaboration
@@ -144,15 +144,15 @@ export default function DemoPage() {
                 <CardTitle className="text-text-primary">Live Video/Audio</CardTitle>
               </div>
               <CardDescription className="text-text-muted">
-                WebRTC-powered video calls with screen sharing and spatial audio
+                Local camera/mic preview in-session; LiveKit when your server is configured
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="text-sm space-y-1 text-text-muted">
-                <li>• 1080p video quality</li>
-                <li>• Screen sharing</li>
-                <li>• Spatial audio</li>
-                <li>• Low latency</li>
+                <li>• Camera and mic controls</li>
+                <li>• LiveKit token API</li>
+                <li>• Session-scoped rooms</li>
+                <li>• Graceful offline fallback</li>
               </ul>
             </CardContent>
           </Card>
@@ -182,7 +182,7 @@ export default function DemoPage() {
                 <CardTitle className="text-text-primary">Real-Time Collaboration</CardTitle>
               </div>
               <CardDescription className="text-text-muted">
-                See cursors, selections, and changes in real-time with Y.js
+                See cursors, selections, and edits live over ActionCable
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -190,7 +190,7 @@ export default function DemoPage() {
                 <li>• Multi-cursor awareness</li>
                 <li>• Live typing indicators</li>
                 <li>• Presence indicators</li>
-                <li>• Conflict-free sync</li>
+                <li>• Session-scoped sync</li>
               </ul>
             </CardContent>
           </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface VRNavigationProps {
   activeNav: string;
@@ -21,13 +22,23 @@ export function VRNavigation({ activeNav, setActiveNav }: VRNavigationProps) {
       }}
     >
       <div className="container mx-auto h-full flex items-center justify-between px-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent-red flex items-center justify-center">
-            <div className="w-5 h-5 bg-white rounded-sm" />
-          </div>
-          <span className="text-white text-xl font-semibold">Logoipsum</span>
-        </div>
+          <Link href="/sessions" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-red flex items-center justify-center shadow-[0_0_20px_rgba(255,0,51,0.35)]">
+              <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+                <path
+                  d="M4 10c0-3 2.5-5.5 6-5.5S16 7 16 10s-2.5 5.5-6 5.5c-1.2 0-2.2-.2-3.1-.6"
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <circle cx="7.5" cy="9" r="1" fill="#fff" />
+                <circle cx="10" cy="9" r="1" fill="#fff" />
+                <circle cx="12.5" cy="9" r="1" fill="#fff" />
+              </svg>
+            </div>
+            <span className="text-white text-xl font-semibold tracking-tight">CodeMehfil</span>
+          </Link>
 
         {/* Navigation Items */}
         <div className="flex items-center gap-10">

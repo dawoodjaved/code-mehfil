@@ -10,7 +10,7 @@ import { MonacoSetup } from "@/components/monaco-setup";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CodePair - Real-Time Collaborative Coding Platform",
+  title: "CodeMehfil - Real-Time Collaborative Coding Platform",
   description: "LiveShare + CoderPad + Replit + Zoom had a baby on steroids",
 };
 

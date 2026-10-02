@@ -179,5 +179,21 @@
     filter: blur(100px);
     opacity: 0.25;
   }
+
+  /* Remote collaborator cursors in Monaco */
+  .remote-cursor-label {
+    font-size: 10px;
+    padding: 0 4px;
+    margin-left: 2px;
+    border-radius: 2px;
+    background: rgba(59, 130, 246, 0.85);
+    color: white;
+    vertical-align: middle;
+  }
+
+  .remote-cursor-cap {
+    border-left: 2px solid #3b82f6;
+    margin-left: -1px;
+  }
 }
 
