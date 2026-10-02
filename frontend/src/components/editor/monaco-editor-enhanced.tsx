@@ -196,6 +196,7 @@ export function MonacoEditorEnhanced({
           return { data: new Uint32Array([]) };
         }
       },
+      releaseDocumentSemanticTokens: () => {},
     });
 
     // Handle content changes
