@@ -5,12 +5,43 @@ import "@excalidraw/excalidraw/index.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CodeMehfil - Real-Time Collaborative Coding Platform",
-  description: "LiveShare + CoderPad + Replit + Zoom had a baby on steroids",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — Real-Time Collaborative Coding & Interviews`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description:
+    "CodeMehfil is a real-time collaborative coding platform for pair programming and technical interviews. Shared Monaco editor, live code execution, chat, video, and whiteboard in one place.",
+  keywords: [
+    "CodeMehfil",
+    "Code Mehfil",
+    "code mehfil",
+    "collaborative coding",
+    "pair programming",
+    "technical interview platform",
+    "online code editor",
+    "real-time coding",
+    "CoderPad alternative",
+  ],
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -21,9 +52,28 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   openGraph: {
-    title: "CodeMehfil",
-    description: "Real-Time Collaborative Coding Platform",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "CodeMehfil" }],
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Real-Time Collaborative Coding & Interviews`,
+    description:
+      "Pair program and run technical interviews with a shared editor, code execution, chat, video, and whiteboard.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "CodeMehfil logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: `${SITE_NAME} — Real-Time Collaborative Coding`,
+    description:
+      "Pair program and interview with a shared editor, execution, chat, video, and whiteboard.",
+    images: ["/logo.png"],
   },
 };
 
@@ -35,6 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <JsonLd />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -50,4 +101,3 @@ export default function RootLayout({
     </html>
   );
 }
-

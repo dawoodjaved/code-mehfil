@@ -96,7 +96,7 @@ In the API service → **Variables**, add:
 |------|--------|
 | `NEXT_PUBLIC_API_URL` | `https://YOUR-RAILWAY-DOMAIN` (no trailing slash) |
 | `NEXT_PUBLIC_CABLE_URL` | `wss://YOUR-RAILWAY-DOMAIN/cable` |
-| `NEXT_PUBLIC_APP_URL` | `https://your-project.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://code-mehfil-sigma.vercel.app` (your real Vercel URL, no trailing slash) |
 | `NEXT_PUBLIC_LIVEKIT_URL` | optional (`wss://….livekit.cloud`) |
 
 ### Step 3: Deploy

@@ -9,45 +9,32 @@ import { BlurOrbs } from "@/components/vr-landing/blur-orbs";
 
 export default function HomePage() {
   const router = useRouter();
+  // Default signed-out so SSR/crawlers get full marketing HTML (not a Loading… shell)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
-      
       if (!token) {
         setIsAuthenticated(false);
-        setIsLoading(false);
         return;
       }
 
-      // Verify token is valid by making an API call
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-        
         const response = await fetch(`${apiUrl}/api/auth/me`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.ok) {
-          const userData = await response.json();
           setIsAuthenticated(true);
         } else {
-          // Token is invalid, remove it
           localStorage.removeItem("token");
           setIsAuthenticated(false);
         }
-      } catch (error) {
-        // Network error or invalid token
-        console.error("Auth check error:", error);
+      } catch {
         localStorage.removeItem("token");
         setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -59,59 +46,6 @@ export default function HomePage() {
     setIsAuthenticated(false);
     router.refresh();
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary relative overflow-hidden">
-        <BlurOrbs />
-        <div className="relative z-cards flex flex-col items-center gap-6">
-          <svg width="128" height="128" viewBox="0 0 128 128" className="opacity-80">
-            <defs>
-              <linearGradient id="loadingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ff1493" />
-                <stop offset="50%" stopColor="#00d4ff" />
-                <stop offset="100%" stopColor="#9333ea" />
-              </linearGradient>
-            </defs>
-            
-            {/* Animated Loading Spinner */}
-            <circle cx="64" cy="64" r="40" fill="none" stroke="url(#loadingGrad)" strokeWidth="4" opacity="0.3" />
-            <circle 
-              cx="64" 
-              cy="64" 
-              r="40" 
-              fill="none" 
-              stroke="url(#loadingGrad)" 
-              strokeWidth="4" 
-              strokeDasharray="125"
-              strokeDashoffset="125"
-              opacity="0.8"
-            >
-              <animate 
-                attributeName="stroke-dashoffset" 
-                values="125;0;125" 
-                dur="2s" 
-                repeatCount="indefinite" 
-              />
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                values="0 64 64;360 64 64"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </circle>
-            
-            {/* Center Dot */}
-            <circle cx="64" cy="64" r="8" fill="url(#loadingGrad)" opacity="0.8">
-              <animate attributeName="r" values="8;12;8" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-          </svg>
-          <div className="text-text-muted text-lg">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative min-h-screen bg-bg-primary overflow-hidden">
