@@ -6,7 +6,8 @@ module Api
     before_action :set_file, only: [:show, :update, :destroy]
     
     def index
-      files = @session.files
+      # Explicit order keeps list stable; content is needed by the editor bootstrap
+      files = @session.files.order(:path)
       render json: files
     end
     

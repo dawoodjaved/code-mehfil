@@ -6,7 +6,7 @@ module Api
     before_action :require_session_manager!, only: [:create, :destroy]
 
     def index
-      questions = @session.session_questions.includes(:question)
+      questions = @session.session_questions.includes(:question).order(assigned_at: :asc)
       render json: questions.as_json(include: :question)
     end
 
@@ -22,7 +22,7 @@ module Api
     end
 
     def update
-      session_question = @session.session_questions.find(params[:id])
+      session_question = @session.session_questions.includes(:question).find(params[:id])
 
       if params[:status] == "completed"
         session_question.mark_completed(params[:time_taken_seconds])

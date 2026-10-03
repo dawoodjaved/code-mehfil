@@ -37,7 +37,9 @@ class Session < ApplicationRecord
   end
   
   def is_participant?(user)
-    participants.exists?(user: user)
+    return false unless user
+
+    participants.exists?(user_id: user.id) || created_by_id == user.id
   end
   
   def start!

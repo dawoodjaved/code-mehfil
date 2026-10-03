@@ -2,16 +2,21 @@ module Api
   class SessionsController < ApplicationController
     include SessionAccess
 
-    before_action :set_session, only: [:show, :update, :destroy, :start, :complete, :extend_time]
+    before_action :set_session, only: [:update, :destroy, :start, :complete, :extend_time]
+    before_action :set_session_for_show, only: [:show]
     before_action :require_session_owner!, only: [:update, :destroy, :start, :complete]
-    
+
     def index
-      sessions = Session.where(
-        id: SessionParticipant.where(user: current_user).select(:session_id)
-      ).or(
-        Session.where(created_by: current_user)
-      ).includes(:created_by, :participants).recent
-      
+      uid = current_user.id
+      participant_session_ids = SessionParticipant.where(user_id: uid).select(:session_id)
+
+      sessions = Session
+        .where(id: participant_session_ids)
+        .or(Session.where(created_by_id: uid))
+        .includes(:created_by, participants: :user)
+        .recent
+        .limit(100)
+
       render json: sessions.as_json(
         include: {
           created_by: { only: [:id, :name, :email] },
@@ -22,7 +27,7 @@ module Api
         methods: [:session_type, :status]
       )
     end
-    
+
     def show
       render json: @session.as_json(
         include: {
@@ -35,17 +40,17 @@ module Api
         }
       )
     end
-    
+
     def create
       session = current_user.sessions_created.build(session_params)
-      
+
       if session.save
         render json: session, status: :created
       else
         render json: { errors: session.errors.full_messages }, status: :unprocessable_entity
       end
     end
-    
+
     def update
       if @session.update(session_params)
         render json: @session
@@ -53,12 +58,12 @@ module Api
         render json: { errors: @session.errors.full_messages }, status: :unprocessable_entity
       end
     end
-    
+
     def destroy
       @session.destroy
       head :no_content
     end
-    
+
     def start
       if @session.start!
         render json: @session
@@ -66,7 +71,7 @@ module Api
         render json: { errors: @session.errors.full_messages }, status: :unprocessable_entity
       end
     end
-    
+
     def complete
       if @session.complete!
         render json: @session
@@ -74,7 +79,7 @@ module Api
         render json: { errors: @session.errors.full_messages }, status: :unprocessable_entity
       end
     end
-    
+
     def extend_time
       minutes = params[:minutes].to_i
       unless minutes.positive? && minutes <= 180
@@ -92,7 +97,7 @@ module Api
         render json: { error: "Failed to extend time" }, status: :unprocessable_entity
       end
     end
-    
+
     def join
       code = params[:code].to_s.strip.upcase
       if code.blank?
@@ -101,7 +106,7 @@ module Api
       end
 
       session = Session.find_by(code: code)
-      
+
       unless session
         render json: { error: "Session not found" }, status: :not_found
         return
@@ -115,17 +120,30 @@ module Api
       participant = session.add_participant(current_user)
       render json: {
         session: session,
-        participant: participant
+        participant: participant.as_json(
+          include: { user: { only: [:id, :name, :email] } }
+        )
       }
     end
-    
+
     private
-    
+
     def set_session
       load_session_from_params!
       require_session_participant!
     end
-    
+
+    # One query for authz + payload associations (avoids N+1 and double find)
+    def set_session_for_show
+      @session = Session.includes(
+        :created_by,
+        :files,
+        :questions,
+        participants: :user
+      ).find(params[:id])
+      require_session_participant!
+    end
+
     def session_params
       params.require(:session).permit(
         :title,

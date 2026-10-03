@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_03_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,6 +21,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.integer "message_type", default: 0, null: false
     t.index ["session_id"], name: "idx_chat_messages_session"
+    t.index ["session_id", "created_at"], name: "idx_chat_messages_session_created"
     t.index ["user_id"], name: "idx_chat_messages_user"
   end
 
@@ -41,6 +42,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
     t.datetime "completed_at", precision: nil
     t.index ["session_id"], name: "idx_executions_session"
     t.index ["status"], name: "idx_executions_status"
+    t.index ["user_id"], name: "idx_executions_user"
+    t.index ["user_id", "created_at"], name: "idx_executions_user_created"
   end
 
   create_table "questions", id: :string, force: :cascade do |t|
@@ -66,6 +69,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
     t.index ["difficulty"], name: "index_questions_on_difficulty"
     t.index ["source", "external_id"], name: "index_questions_on_source_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
     t.index ["source"], name: "index_questions_on_source"
+    t.index ["starter_code"], name: "idx_questions_starter_code_gin", using: :gin
   end
 
   create_table "session_files", id: :string, force: :cascade do |t|
@@ -98,6 +102,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
     t.jsonb "cursor_position"
     t.datetime "last_seen_at"
     t.integer "role", default: 0, null: false
+    t.index ["session_id"], name: "idx_session_participants_session"
+    t.index ["session_id", "user_id"], name: "idx_session_participants_session_user", unique: true
+    t.index ["user_id"], name: "idx_session_participants_user"
   end
 
   create_table "session_questions", id: :string, force: :cascade do |t|
@@ -132,6 +139,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_150000) do
     t.datetime "updated_at", precision: nil
     t.string "default_language", default: "javascript"
     t.index ["code"], name: "idx_sessions_code"
+    t.index ["created_at"], name: "idx_sessions_created_at"
     t.index ["created_by_id"], name: "idx_sessions_created_by"
     t.index ["status"], name: "idx_sessions_status"
     t.unique_constraint ["code"], name: "sessions_code_key"

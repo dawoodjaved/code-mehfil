@@ -13,7 +13,7 @@ module Api
       execution = Execution.find(params[:id])
       allowed =
         execution.user_id == current_user.id ||
-        (execution.respond_to?(:session) && execution.session&.is_participant?(current_user))
+        SessionParticipant.exists?(session_id: execution.session_id, user_id: current_user.id)
 
       unless allowed
         render json: { error: "Access denied" }, status: :forbidden

@@ -3,19 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { MonacoEditor } from "@/components/editor/monaco-editor";
-import { VideoRoom } from "@/components/video/video-room";
 import { FileExplorer } from "@/components/file-tree/file-explorer";
-import { Terminal } from "@/components/terminal/terminal";
-import { InterviewMode } from "@/components/interview/interview-mode";
-import { EnhancedChat } from "@/components/chat/enhanced-chat";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { apiBase, authHeaders, clearAuthToken, signInPath } from "@/lib/auth";
-
-const Whiteboard = dynamic(
-  () => import("@/components/whiteboard/whiteboard").then((mod) => ({ default: mod.Whiteboard })),
-  { ssr: false }
-);
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +13,37 @@ import { Video, Code, FileText, Terminal as TerminalIcon, Users, Clipboard, Shar
 import { Input } from "@/components/ui/input";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
+
+const tabFallback = (
+  <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+    Loading…
+  </div>
+);
+
+const MonacoEditor = dynamic(
+  () => import("@/components/editor/monaco-editor").then((mod) => ({ default: mod.MonacoEditor })),
+  { ssr: false, loading: () => tabFallback }
+);
+const VideoRoom = dynamic(
+  () => import("@/components/video/video-room").then((mod) => ({ default: mod.VideoRoom })),
+  { ssr: false, loading: () => tabFallback }
+);
+const Terminal = dynamic(
+  () => import("@/components/terminal/terminal").then((mod) => ({ default: mod.Terminal })),
+  { ssr: false, loading: () => tabFallback }
+);
+const InterviewMode = dynamic(
+  () => import("@/components/interview/interview-mode").then((mod) => ({ default: mod.InterviewMode })),
+  { ssr: false, loading: () => tabFallback }
+);
+const EnhancedChat = dynamic(
+  () => import("@/components/chat/enhanced-chat").then((mod) => ({ default: mod.EnhancedChat })),
+  { ssr: false }
+);
+const Whiteboard = dynamic(
+  () => import("@/components/whiteboard/whiteboard").then((mod) => ({ default: mod.Whiteboard })),
+  { ssr: false, loading: () => tabFallback }
+);
 
 interface FileNode {
   id: string;
@@ -112,11 +133,19 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
         if (data.session_type === "interview") setSessionType("interview");
         setAccess("granted");
 
+        // Prefer payload from show — avoids 2–3 extra round trips on open
+        if (Array.isArray(data.participants)) {
+          setParticipants(data.participants);
+        }
+
+        const hydrateFiles = Array.isArray(data.files)
+          ? applyFilesPayload(data.files)
+          : fetchSessionFiles();
+
         await Promise.all([
-          fetchParticipants(),
+          Array.isArray(data.participants) ? Promise.resolve() : fetchParticipants(),
           fetchCurrentUser(),
-          fetchSessionFiles(),
-          fetchLivekitToken(),
+          hydrateFiles,
         ]);
       } catch {
         if (!cancelled) {
@@ -132,6 +161,13 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
+
+  // Fetch LiveKit only when the video tab is opened
+  useEffect(() => {
+    if (access !== "granted" || activeTab !== "video" || livekitToken) return;
+    void fetchLivekitToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [access, activeTab, livekitToken, sessionId]);
 
   const fetchLivekitToken = async () => {
     try {
@@ -179,45 +215,50 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
     language: f.language || "javascript",
   });
 
+  const createDefaultFile = async () => {
+    const createRes = await fetch(`${apiBase()}/api/sessions/${sessionId}/files`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        filename: "main.js",
+        path: "/main.js",
+        language: "javascript",
+        content: "// Welcome to CodeMehfil!\n// Start coding...\n",
+      }),
+    });
+    if (!createRes.ok) return;
+    const created = await createRes.json();
+    const node = mapApiFile(created);
+    setFiles([node]);
+    setSelectedFile(node);
+    setLanguage(created.language || "javascript");
+    setCode(created.content || "");
+  };
+
+  const applyFilesPayload = async (data: any[]) => {
+    const mapped: FileNode[] = (Array.isArray(data) ? data : []).map(mapApiFile);
+    setFiles(mapped);
+
+    if (mapped.length === 0) {
+      await createDefaultFile();
+      return;
+    }
+
+    const first = mapped[0];
+    const full = data.find((f: any) => String(f.id) === first.id);
+    setSelectedFile(first);
+    setLanguage(first.language || "javascript");
+    setCode(full?.content ?? `// ${first.name}\n`);
+  };
+
   const fetchSessionFiles = async () => {
     try {
       const response = await fetch(`${apiBase()}/api/sessions/${sessionId}/files`, {
         headers: authHeaders(),
       });
       if (!response.ok) return;
-
       const data = await response.json();
-      const mapped: FileNode[] = (Array.isArray(data) ? data : []).map(mapApiFile);
-      setFiles(mapped);
-
-      if (mapped.length > 0) {
-        const first = mapped[0];
-        const full = Array.isArray(data)
-          ? data.find((f: any) => String(f.id) === first.id)
-          : null;
-        setSelectedFile(first);
-        setLanguage(first.language || "javascript");
-        setCode(full?.content ?? `// ${first.name}\n`);
-      } else {
-        const createRes = await fetch(`${apiBase()}/api/sessions/${sessionId}/files`, {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({
-            filename: "main.js",
-            path: "/main.js",
-            language: "javascript",
-            content: "// Welcome to CodeMehfil!\n// Start coding...\n",
-          }),
-        });
-        if (createRes.ok) {
-          const created = await createRes.json();
-          const node = mapApiFile(created);
-          setFiles([node]);
-          setSelectedFile(node);
-          setLanguage(created.language || "javascript");
-          setCode(created.content || "");
-        }
-      }
+      await applyFilesPayload(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch session files:", error);
     }
@@ -741,6 +782,8 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
                     language={language}
                     initialValue={code}
                     onChange={handleCodeChange}
+                    userId={currentUser?.id}
+                    userName={currentUser?.name}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
@@ -758,20 +801,22 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
 
             <TabsContent value="interview" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
               <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                <InterviewMode
-                  sessionId={sessionId}
-                  fileId={selectedFile?.id}
-                  code={code}
-                  language={language}
-                  onCodeChange={handleCodeChange}
-                  onLanguageChange={setLanguage}
-                />
+                {activeTab === "interview" ? (
+                  <InterviewMode
+                    sessionId={sessionId}
+                    fileId={selectedFile?.id}
+                    code={code}
+                    language={language}
+                    onCodeChange={handleCodeChange}
+                    onLanguageChange={setLanguage}
+                  />
+                ) : null}
               </div>
             </TabsContent>
 
             <TabsContent value="video" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
               <div className="flex-1 min-h-0 flex flex-col bg-background">
-                {livekitToken ? (
+                {activeTab !== "video" ? null : livekitToken ? (
                   <VideoRoom
                     roomName={sessionId}
                     token={livekitToken}
@@ -804,11 +849,13 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
             </TabsContent>
 
             <TabsContent value="terminal" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden data-[state=inactive]:hidden data-[state=active]:flex">
-              <Terminal
-                sessionId={sessionId}
-                onCommand={handleTerminalCommand}
-                fileNames={files.map((f) => f.name)}
-              />
+              {activeTab === "terminal" ? (
+                <Terminal
+                  sessionId={sessionId}
+                  onCommand={handleTerminalCommand}
+                  fileNames={files.map((f) => f.name)}
+                />
+              ) : null}
             </TabsContent>
           </Tabs>
         </div>

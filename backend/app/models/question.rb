@@ -31,7 +31,13 @@ class Question < ApplicationRecord
   scope :by_difficulty, ->(difficulty) { where(difficulty: difficulty) }
   scope :by_category, ->(category) { where(category: category) }
   scope :by_source, ->(source) { where(source: source) }
-  scope :search, ->(query) { where("title ILIKE ? OR description ILIKE ?", "%#{query}%", "%#{query}%") }
+  scope :search, lambda { |query|
+    q = "%#{query.to_s.strip}%"
+    where("title ILIKE ? OR description ILIKE ?", q, q)
+  }
+  scope :with_starter_language, lambda { |language|
+    where("starter_code ? :lang", lang: language.to_s)
+  }
   scope :internal, -> { where(source: "internal") }
   scope :hackerrank, -> { where(source: "hackerrank") }
 

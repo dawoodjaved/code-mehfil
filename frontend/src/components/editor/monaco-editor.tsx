@@ -11,6 +11,9 @@ interface MonacoEditorProps {
   language: string;
   initialValue?: string;
   onChange?: (value: string) => void;
+  /** Skip a duplicate /auth/me when the parent already knows the user */
+  userId?: string;
+  userName?: string;
 }
 
 export function MonacoEditor({
@@ -19,10 +22,12 @@ export function MonacoEditor({
   language,
   initialValue = "",
   onChange,
+  userId: userIdProp,
+  userName: userNameProp,
 }: MonacoEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const [userId, setUserId] = useState<string>("");
-  const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState<string>(userIdProp || "");
+  const [userName, setUserName] = useState<string>(userNameProp || "");
   const [mounted, setMounted] = useState(false);
   const connectYjs = useSessionStore((s) => s.connectYjs);
   const disconnectYjs = useSessionStore((s) => s.disconnectYjs);
@@ -30,6 +35,12 @@ export function MonacoEditor({
   const seedValue = typeof synced === "string" ? synced : initialValue;
 
   useEffect(() => {
+    if (userIdProp) {
+      setUserId(userIdProp);
+      setUserName(userNameProp || "User");
+      return;
+    }
+
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -53,7 +64,7 @@ export function MonacoEditor({
     };
 
     fetchUserInfo();
-  }, []);
+  }, [userIdProp, userNameProp]);
 
   const handleEditorDidMount = useCallback((ed: editor.IStandaloneCodeEditor) => {
     editorRef.current = ed;
@@ -92,13 +103,15 @@ export function MonacoEditor({
         onMount={handleEditorDidMount}
         options={{
           automaticLayout: true,
-          minimap: { enabled: true },
+          minimap: { enabled: false },
           fontSize: 14,
           lineNumbers: "on",
           roundedSelection: false,
           scrollBeyondLastLine: false,
           readOnly: false,
           cursorStyle: "line",
+          renderWhitespace: "none",
+          smoothScrolling: false,
         }}
       />
     </div>

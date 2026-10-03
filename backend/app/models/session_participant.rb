@@ -22,11 +22,6 @@ class SessionParticipant < ApplicationRecord
     update_column(:last_seen_at, Time.current)
   end
 
-  def cursor_position=(position)
-    value = position.is_a?(String) ? position : position
-    update_column(:cursor_position, value)
-  end
-
   private
 
   def generate_uuid

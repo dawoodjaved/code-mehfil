@@ -4,6 +4,10 @@ const webpack = require("webpack");
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@codemehfil/ui"],
+  experimental: {
+    // Tree-shake icon/barrel imports for smaller client bundles
+    optimizePackageImports: ["lucide-react"],
+  },
   webpack: (config, { isServer }) => {
     // Polyfills for Node.js modules used by yjs and y-websocket
     if (!isServer) {

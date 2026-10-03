@@ -11,11 +11,10 @@ module Api
       questions = questions.by_source(params[:source]) if params[:source].present?
       questions = questions.search(params[:q]) if params[:q].present?
 
-      if params[:language].present?
-        questions = questions.select do |q|
-          q.starter_code.present? && q.starter_code.key?(params[:language])
-        end
-      end
+      # Filter in SQL (jsonb key exists) — never load the full table into Ruby
+      questions = questions.with_starter_language(params[:language]) if params[:language].present?
+
+      questions = questions.order(created_at: :desc).limit(200)
 
       render json: questions.map { |q| format_question_json(q) }
     end
@@ -36,6 +35,8 @@ module Api
 
     def update
       if @question.update(question_params)
+        # Ensure associations stay loaded after update
+        @question = Question.includes(:created_by, :test_cases).find(@question.id)
         render json: format_question_json(@question)
       else
         render json: { errors: @question.errors.full_messages }, status: :unprocessable_entity
@@ -50,7 +51,7 @@ module Api
     private
 
     def set_question
-      @question = Question.find(params[:id])
+      @question = Question.includes(:created_by, :test_cases).find(params[:id])
     end
 
     def require_question_owner!

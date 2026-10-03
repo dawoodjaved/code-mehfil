@@ -36,6 +36,51 @@ interface SessionState {
 
 const CURSOR_COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#a855f7", "#f59e0b", "#06b6d4"];
 
+/** Keep collab snappy without flooding the wire on every keystroke / cursor move */
+const CODE_BROADCAST_MS = 80;
+const CURSOR_BROADCAST_MS = 40;
+
+const pendingCodeBroadcasts = new Map<string, () => void>();
+const codeBroadcastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let cursorBroadcastTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingCursorBroadcast: (() => void) | null = null;
+
+function scheduleCodeBroadcast(key: string, send: () => void) {
+  pendingCodeBroadcasts.set(key, send);
+  if (codeBroadcastTimers.has(key)) return;
+  codeBroadcastTimers.set(
+    key,
+    setTimeout(() => {
+      codeBroadcastTimers.delete(key);
+      const fn = pendingCodeBroadcasts.get(key);
+      pendingCodeBroadcasts.delete(key);
+      fn?.();
+    }, CODE_BROADCAST_MS)
+  );
+}
+
+function flushCodeBroadcast(key: string) {
+  const timer = codeBroadcastTimers.get(key);
+  if (timer) {
+    clearTimeout(timer);
+    codeBroadcastTimers.delete(key);
+  }
+  const fn = pendingCodeBroadcasts.get(key);
+  pendingCodeBroadcasts.delete(key);
+  fn?.();
+}
+
+function scheduleCursorBroadcast(send: () => void) {
+  pendingCursorBroadcast = send;
+  if (cursorBroadcastTimer) return;
+  cursorBroadcastTimer = setTimeout(() => {
+    cursorBroadcastTimer = null;
+    const fn = pendingCursorBroadcast;
+    pendingCursorBroadcast = null;
+    fn?.();
+  }, CURSOR_BROADCAST_MS);
+}
+
 function colorForUser(userId: string) {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = (hash + userId.charCodeAt(i) * 17) % CURSOR_COLORS.length;
@@ -302,24 +347,26 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           }
         });
 
-        const activeCable = get().cable;
-        const activeId = get().cableIdentifier;
-        if (!activeCable || activeCable.readyState !== WebSocket.OPEN || !activeId) return;
+        scheduleCodeBroadcast(docKey, () => {
+          const activeCable = get().cable;
+          const activeId = get().cableIdentifier;
+          if (!activeCable || activeCable.readyState !== WebSocket.OPEN || !activeId) return;
 
-        activeCable.send(
-          JSON.stringify({
-            command: "message",
-            identifier: activeId,
-            data: JSON.stringify({
-              action: "code_change",
-              file_id: fileId,
-              content,
-              cursor_position: editor.getPosition(),
-              user_id: userId,
-              user_name: userName,
-            }),
-          })
-        );
+          activeCable.send(
+            JSON.stringify({
+              command: "message",
+              identifier: activeId,
+              data: JSON.stringify({
+                action: "code_change",
+                file_id: fileId,
+                content: get().fileContents.get(docKey) ?? content,
+                cursor_position: editor.getPosition(),
+                user_id: userId,
+                user_name: userName,
+              }),
+            })
+          );
+        });
       })
     );
 
@@ -341,39 +388,42 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   broadcastCursor: (fileId: string, position: Monaco.Position, selection?: Monaco.Selection) => {
-    const { cable, cableIdentifier, connectedSessionId } = get();
-    if (!cable || cable.readyState !== WebSocket.OPEN || !cableIdentifier || !connectedSessionId) return;
+    scheduleCursorBroadcast(() => {
+      const { cable, cableIdentifier, connectedSessionId } = get();
+      if (!cable || cable.readyState !== WebSocket.OPEN || !cableIdentifier || !connectedSessionId) return;
 
-    const payload = {
-      command: "message",
-      identifier: cableIdentifier,
-      data: JSON.stringify({
-        action: "cursor_update",
-        file_id: fileId,
-        position: {
-          lineNumber: position.lineNumber,
-          column: position.column,
-        },
-        selection: selection
-          ? {
-              startLineNumber: selection.startLineNumber,
-              startColumn: selection.startColumn,
-              endLineNumber: selection.endLineNumber,
-              endColumn: selection.endColumn,
-            }
-          : undefined,
-      }),
-    };
-    try {
-      cable.send(JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
+      const payload = {
+        command: "message",
+        identifier: cableIdentifier,
+        data: JSON.stringify({
+          action: "cursor_update",
+          file_id: fileId,
+          position: {
+            lineNumber: position.lineNumber,
+            column: position.column,
+          },
+          selection: selection
+            ? {
+                startLineNumber: selection.startLineNumber,
+                startColumn: selection.startColumn,
+                endLineNumber: selection.endLineNumber,
+                endColumn: selection.endColumn,
+              }
+            : undefined,
+        }),
+      };
+      try {
+        cable.send(JSON.stringify(payload));
+      } catch {
+        // ignore
+      }
+    });
   },
 
   disconnectYjs: (sessionId: string, fileId: string, editor?: Monaco.editor.IStandaloneCodeEditor) => {
     const { editors, decorations } = get();
     const docKey = `${sessionId}:${fileId}`;
+    flushCodeBroadcast(docKey);
     const setForKey = editors.get(docKey);
 
     if (setForKey && editor) {
