@@ -10,7 +10,7 @@ namespace :questions do
     path = Rails.root.join("..", path).expand_path.to_s unless Pathname.new(path).absolute?
 
     unless File.exist?(path)
-      abort "Missing clean JSON at #{path}. Run: python3 scripts/clean_hackerrank_csv.py"
+      abort "Missing clean JSON at #{path}. Place a cleaned challenges JSON at data/hackerrank_challenges.clean.json (or set HACKERRANK_JSON)."
     end
 
     payload = JSON.parse(File.read(path))

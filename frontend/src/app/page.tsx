@@ -16,7 +16,6 @@ export default function HomePage() {
     // Check if user is authenticated
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
-      console.log("Home page - Token check:", token ? "Token exists" : "No token");
       
       if (!token) {
         setIsAuthenticated(false);
@@ -27,7 +26,6 @@ export default function HomePage() {
       // Verify token is valid by making an API call
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-        console.log("Checking auth with:", `${apiUrl}/api/auth/me`);
         
         const response = await fetch(`${apiUrl}/api/auth/me`, {
           headers: {
@@ -35,15 +33,11 @@ export default function HomePage() {
           }
         });
 
-        console.log("Auth check response status:", response.status);
-
         if (response.ok) {
           const userData = await response.json();
-          console.log("User authenticated:", userData);
           setIsAuthenticated(true);
         } else {
           // Token is invalid, remove it
-          console.log("Token invalid, removing");
           localStorage.removeItem("token");
           setIsAuthenticated(false);
         }
@@ -225,14 +219,6 @@ export default function HomePage() {
                   <Link href="/sessions">My Sessions</Link>
                 </Button>
                 <Button 
-                  asChild 
-                  variant="outline" 
-                  size="lg"
-                  className="border-[rgba(255,255,255,0.2)] text-text-primary hover:bg-[rgba(255,255,255,0.1)] rounded-full px-8 py-3"
-                >
-                  <Link href="/demo">View Demo</Link>
-                </Button>
-                <Button 
                   variant="ghost" 
                   size="lg" 
                   onClick={handleLogout}
@@ -256,7 +242,7 @@ export default function HomePage() {
                   size="lg"
                   className="border-[rgba(255,255,255,0.2)] text-text-primary hover:bg-[rgba(255,255,255,0.1)] rounded-full px-8 py-3"
                 >
-                  <Link href="/demo">View Demo</Link>
+                  <Link href="/auth/signup">Sign Up</Link>
                 </Button>
               </>
             )}
