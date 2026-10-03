@@ -19,6 +19,7 @@ interface FileExplorerProps {
   onFileCreate: (path: string, type: "file" | "folder") => void;
   onFileDelete: (id: string) => void;
   selectedFileId?: string;
+  className?: string;
 }
 
 export function FileExplorer({
@@ -27,6 +28,7 @@ export function FileExplorer({
   onFileCreate,
   onFileDelete,
   selectedFileId,
+  className = "",
 }: FileExplorerProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
@@ -68,9 +70,11 @@ export function FileExplorer({
           ) : (
             <File className="w-4 h-4 text-gray-500" />
           )}
-          <span className="text-sm flex-1">{node.name}</span>
+          <span className="text-sm flex-1 truncate">{node.name}</span>
           {node.type === "file" && node.language && (
-            <span className="text-xs text-muted-foreground">{node.language}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline shrink-0">
+              {node.language}
+            </span>
           )}
         </div>
         {node.type === "folder" && isExpanded && node.children && (
@@ -83,7 +87,7 @@ export function FileExplorer({
   };
 
   return (
-    <div className="h-full flex flex-col border-r bg-muted/20">
+    <div className={`h-full flex flex-col border-r bg-muted/20 w-full min-w-0 ${className}`}>
       <div className="border-b p-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Files</h3>
         <div className="flex gap-1">

@@ -9,7 +9,20 @@ import { apiBase, authHeaders, clearAuthToken, signInPath } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Video, Code, FileText, Terminal as TerminalIcon, Users, Clipboard, Share2, Copy, Mail, X } from "lucide-react";
+import {
+  Video,
+  Code,
+  FileText,
+  Terminal as TerminalIcon,
+  Users,
+  Clipboard,
+  Share2,
+  Copy,
+  Mail,
+  X,
+  FolderTree,
+  MessageSquare,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
@@ -92,6 +105,8 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
   const [isInviting, setIsInviting] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+  const [showFilesPanel, setShowFilesPanel] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -566,8 +581,8 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
     <div className="h-screen flex flex-col bg-background">
       {/* Share Modal */}
       {showShareDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowShareDialog(false)}>
-          <div className="bg-background border rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowShareDialog(false)}>
+          <div className="bg-background border rounded-t-xl sm:rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Share Session</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowShareDialog(false)}>
@@ -672,25 +687,38 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
       )}
       
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between px-4 gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-2 sm:px-4 py-2 min-h-14">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="lg:hidden shrink-0"
+              onClick={() => {
+                setShowFilesPanel((v) => !v);
+                setShowChatPanel(false);
+              }}
+              aria-label="Toggle files"
+            >
+              <FolderTree className="w-4 h-4" />
+            </Button>
             <Link
               href="/sessions"
               className="shrink-0 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="" width={22} height={22} className="rounded-md" />
-              CodeMehfil
+              <span className="hidden sm:inline">CodeMehfil</span>
             </Link>
-            <span className="text-muted-foreground/40">/</span>
-            <h1 className="text-lg font-semibold truncate">
+            <span className="text-muted-foreground/40 hidden sm:inline">/</span>
+            <h1 className="text-sm sm:text-lg font-semibold truncate max-w-[40vw] sm:max-w-none">
               {sessionData?.title || `Session ${sessionId.slice(0, 8)}…`}
             </h1>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="px-3 py-1 border rounded text-sm shrink-0"
+              className="px-2 sm:px-3 py-1 border rounded text-xs sm:text-sm shrink-0 max-w-[7.5rem] sm:max-w-none"
             >
               {SUPPORTED_LANGUAGES.map((lang) => (
                 <option key={lang.value} value={lang.value}>
@@ -699,53 +727,92 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
               ))}
             </select>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => {
+                setShowChatPanel((v) => !v);
+                setShowFilesPanel(false);
+              }}
+              aria-label="Toggle chat"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="hidden md:inline-flex">
               <Users className="w-4 h-4 mr-2" />
               Participants ({participants.length})
             </Button>
             <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
+              <Share2 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Share</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="relative flex-1 flex overflow-hidden min-h-0">
+        {/* Mobile overlays */}
+        {(showFilesPanel || showChatPanel) && (
+          <button
+            type="button"
+            className="lg:hidden absolute inset-0 z-20 bg-black/40"
+            aria-label="Close panel"
+            onClick={() => {
+              setShowFilesPanel(false);
+              setShowChatPanel(false);
+            }}
+          />
+        )}
+
         {/* Sidebar - File Explorer */}
-        <FileExplorer
-          files={files}
-          onFileSelect={handleFileSelect}
-          onFileCreate={handleFileCreate}
-          onFileDelete={handleFileDelete}
-          selectedFileId={selectedFile?.id}
-        />
+        <div
+          className={`
+            z-30 h-full w-64 max-w-[85vw] shrink-0 bg-background
+            absolute lg:static inset-y-0 left-0
+            transition-transform duration-200
+            ${showFilesPanel ? "translate-x-0" : "-translate-x-full"}
+            lg:translate-x-0 lg:w-52 xl:w-56
+          `}
+        >
+          <FileExplorer
+            files={files}
+            onFileSelect={(file) => {
+              handleFileSelect(file);
+              setShowFilesPanel(false);
+            }}
+            onFileCreate={handleFileCreate}
+            onFileDelete={handleFileDelete}
+            selectedFileId={selectedFile?.id}
+          />
+        </div>
 
         {/* Main Area - fills remaining height */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden min-w-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <TabsList className="border-b rounded-none flex-shrink-0 shrink-0">
-              <TabsTrigger value="code">
-                <Code className="w-4 h-4 mr-2" />
-                Code
+            <TabsList className="border-b rounded-none flex-shrink-0 shrink-0 w-full justify-start overflow-x-auto h-auto flex-nowrap gap-0 rounded-none bg-transparent p-0">
+              <TabsTrigger value="code" className="rounded-none shrink-0 px-2.5 sm:px-3">
+                <Code className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Code</span>
               </TabsTrigger>
-              <TabsTrigger value="interview">
-                <Clipboard className="w-4 h-4 mr-2" />
-                Interview
+              <TabsTrigger value="interview" className="rounded-none shrink-0 px-2.5 sm:px-3">
+                <Clipboard className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Interview</span>
               </TabsTrigger>
-              <TabsTrigger value="video">
-                <Video className="w-4 h-4 mr-2" />
-                Video
+              <TabsTrigger value="video" className="rounded-none shrink-0 px-2.5 sm:px-3">
+                <Video className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Video</span>
               </TabsTrigger>
-              <TabsTrigger value="whiteboard">
-                <FileText className="w-4 h-4 mr-2" />
-                Whiteboard
+              <TabsTrigger value="whiteboard" className="rounded-none shrink-0 px-2.5 sm:px-3">
+                <FileText className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Whiteboard</span>
               </TabsTrigger>
-              <TabsTrigger value="terminal">
-                <TerminalIcon className="w-4 h-4 mr-2" />
-                Terminal
+              <TabsTrigger value="terminal" className="rounded-none shrink-0 px-2.5 sm:px-3">
+                <TerminalIcon className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Terminal</span>
               </TabsTrigger>
             </TabsList>
 
@@ -861,32 +928,52 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
         </div>
 
         {/* Right Sidebar - Participants & Chat */}
-        <aside className="w-80 border-l bg-muted/50 flex flex-col min-h-0">
-          <div className="p-4 space-y-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+        <aside
+          className={`
+            z-30 h-full w-80 max-w-[90vw] border-l bg-muted/50 flex flex-col min-h-0
+            absolute lg:static inset-y-0 right-0
+            transition-transform duration-200
+            ${showChatPanel ? "translate-x-0" : "translate-x-full"}
+            lg:translate-x-0
+          `}
+        >
+          <div className="p-3 sm:p-4 space-y-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between lg:hidden">
+              <span className="text-sm font-medium">Session panel</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChatPanel(false)}
+                aria-label="Close chat panel"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3 sm:p-6">
                 <CardTitle className="text-sm">Participants ({participants.length})</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {participants.length === 0 ? (
                     <div className="text-xs text-muted-foreground">No participants yet</div>
                   ) : (
                     participants.map((participant) => (
-                      <div key={participant.id} className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold">
+                      <div key={participant.id} className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold shrink-0">
                           {participant.user?.name?.[0]?.toUpperCase() || "U"}
                         </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">
                             {participant.user?.name || "Unknown User"}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             {participant.user?.email}
                           </div>
                         </div>
                         {participant.role && (
-                          <span className="text-xs px-2 py-1 bg-muted rounded">
+                          <span className="text-xs px-2 py-1 bg-muted rounded shrink-0">
                             {participant.role}
                           </span>
                         )}
@@ -899,10 +986,10 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
 
             {activeTab === "code" && (
               <Card className="shrink-0">
-                <CardHeader>
+                <CardHeader className="p-3 sm:p-6">
                   <CardTitle className="text-sm">Quick Run</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                   <Button
                     onClick={() => executeCode()}
                     disabled={isExecuting || !code.trim()}

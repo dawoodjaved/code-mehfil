@@ -61,15 +61,15 @@ export default function HomePage() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-16 relative z-cards">
-        <div className="text-center space-y-6 mb-16">
+      <div className="container mx-auto px-4 py-10 sm:py-16 relative z-cards">
+        <div className="text-center space-y-4 sm:space-y-6 mb-12 sm:mb-16">
           {/* Hero Illustration - 3D Vector */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-4 sm:mb-8">
             <svg 
               width="400" 
               height="300" 
               viewBox="0 0 400 300" 
-              className="w-full max-w-md h-auto opacity-90 hover:opacity-100 transition-opacity duration-300"
+              className="w-full max-w-xs sm:max-w-md h-auto opacity-90 hover:opacity-100 transition-opacity duration-300"
             >
               <defs>
                 <linearGradient id="heroGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -123,26 +123,26 @@ export default function HomePage() {
             </svg>
           </div>
           
-          <div className="flex flex-col items-center gap-5">
+          <div className="flex flex-col items-center gap-3 sm:gap-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="CodeMehfil"
               width={88}
               height={88}
-              className="rounded-[22px] shadow-[0_0_40px_rgba(255,0,51,0.35)]"
+              className="w-16 h-16 sm:w-[88px] sm:h-[88px] rounded-[18px] sm:rounded-[22px] shadow-[0_0_40px_rgba(255,0,51,0.35)]"
             />
-            <h1 className="text-6xl font-bold tracking-tight text-text-primary">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-text-primary px-2">
               CodeMehfil <span className="text-accent-red">2025</span>
             </h1>
           </div>
-          <p className="text-2xl text-text-muted max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl md:text-2xl text-text-muted max-w-2xl mx-auto px-2">
             The Definitive Real-Time Coding Collaboration & Interview Platform
           </p>
-          <p className="text-lg text-text-muted/80">
+          <p className="text-sm sm:text-lg text-text-muted/80 px-4">
             LiveShare + CoderPad + Replit + Zoom had a baby on steroids
           </p>
-          <div className="flex gap-4 justify-center pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 px-4">
             {isAuthenticated ? (
               <>
                 <Button 
@@ -184,16 +184,16 @@ export default function HomePage() {
         </div>
 
         {/* Features Section */}
-        <div className="mt-20 mb-12">
-          <h2 className="text-4xl font-bold text-center text-text-primary mb-4">
+        <div className="mt-12 sm:mt-20 mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-text-primary mb-3 sm:mb-4 px-2">
             Everything You Need for <span className="text-accent-red">Collaborative Coding</span>
           </h2>
-          <p className="text-xl text-center text-text-muted max-w-3xl mx-auto mb-12">
+          <p className="text-base sm:text-xl text-center text-text-muted max-w-3xl mx-auto mb-8 sm:mb-12 px-2">
             A complete platform combining the best features of LiveShare, CoderPad, Replit, and Zoom into one powerful tool
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Card className="glass border-[rgba(255,255,255,0.1)] transition-all duration-400 hover:-translate-y-1 hover:border-[rgba(255,255,255,0.2)] overflow-hidden">
             <div className="p-4 flex justify-center">
               <svg width="128" height="128" viewBox="0 0 128 128" className="opacity-90">

@@ -200,7 +200,7 @@ function SessionsPageInner() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search rooms…"
-                className="pl-9 w-[200px] bg-white/5 border-white/10"
+                className="pl-9 w-full sm:w-[200px] bg-white/5 border-white/10"
               />
             </div>
             <select

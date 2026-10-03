@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_03_170000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_03_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,8 +20,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_03_170000) do
     t.text "content", null: false
     t.datetime "created_at", precision: nil, default: -> { "CURRENT_TIMESTAMP" }
     t.integer "message_type", default: 0, null: false
-    t.index ["session_id"], name: "idx_chat_messages_session"
     t.index ["session_id", "created_at"], name: "idx_chat_messages_session_created"
+    t.index ["session_id"], name: "idx_chat_messages_session"
     t.index ["user_id"], name: "idx_chat_messages_user"
   end
 
@@ -42,8 +42,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_03_170000) do
     t.datetime "completed_at", precision: nil
     t.index ["session_id"], name: "idx_executions_session"
     t.index ["status"], name: "idx_executions_status"
-    t.index ["user_id"], name: "idx_executions_user"
     t.index ["user_id", "created_at"], name: "idx_executions_user_created"
+    t.index ["user_id"], name: "idx_executions_user"
   end
 
   create_table "questions", id: :string, force: :cascade do |t|
@@ -102,8 +102,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_03_170000) do
     t.jsonb "cursor_position"
     t.datetime "last_seen_at"
     t.integer "role", default: 0, null: false
-    t.index ["session_id"], name: "idx_session_participants_session"
     t.index ["session_id", "user_id"], name: "idx_session_participants_session_user", unique: true
+    t.index ["session_id"], name: "idx_session_participants_session"
     t.index ["user_id"], name: "idx_session_participants_user"
   end
 

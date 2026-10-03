@@ -532,9 +532,9 @@ export function InterviewMode({
             </div>
           ) : (
             <>
-              <div className="border-b p-4 flex items-center justify-between flex-shrink-0">
-                <div>
-                  <h2 className="text-xl font-bold">{question.title}</h2>
+              <div className="border-b p-3 sm:p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-shrink-0">
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold truncate sm:whitespace-normal">{question.title}</h2>
                   <div className="flex gap-2 mt-1 flex-wrap items-center">
                     <span className="text-xs px-2 py-1 bg-muted rounded">
                       {question.difficulty}
@@ -562,17 +562,18 @@ export function InterviewMode({
                     ) : null}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap shrink-0">
                   <TimeExtension
                     sessionId={sessionId}
                     currentTime={timer}
                     canExtend={true}
                     onExtend={(mins) => setTimer((t) => Math.max(0, t - mins * 60))}
                   />
-                  <div className="text-2xl font-mono">{formatTime(timer)}</div>
+                  <div className="text-xl sm:text-2xl font-mono">{formatTime(timer)}</div>
                   <Button
                     onClick={() => setIsRunning(!isRunning)}
                     variant={isRunning ? "destructive" : "default"}
+                    size="sm"
                   >
                     {isRunning ? "Pause" : "Start"}
                   </Button>
@@ -581,8 +582,8 @@ export function InterviewMode({
 
               <div className="flex-1 flex overflow-hidden min-h-0">
                 <div className="flex-1 flex flex-col min-h-0">
-                  <div className="flex-1 grid grid-cols-2 min-h-0 overflow-hidden">
-                    <div className="border-r p-4 overflow-y-auto min-h-0">
+                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0 overflow-hidden">
+                    <div className="border-b lg:border-b-0 lg:border-r p-3 sm:p-4 overflow-y-auto min-h-0 max-h-[40vh] lg:max-h-none">
                       <Card>
                         <CardHeader>
                           <CardTitle>Problem Description</CardTitle>
