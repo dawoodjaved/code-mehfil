@@ -2,7 +2,8 @@
 
 This document is a honest record of issues encountered while deploying **CodeMehfil** to **Railway** (API) + **Vercel** (frontend), after you set up the project and asked to deploy, seed the database, and wire the CLI.
 
-It is **not** a step-by-step tutorial — use [DEPLOYMENT.md](./DEPLOYMENT.md) for that. This is the “what broke and why” log.
+This is the deploy post-mortem / “what broke and why” log for Railway + Vercel.
+Step-by-step how-to lives in local `DEPLOYMENT.md` (gitignored — not published).
 
 ---
 
@@ -187,7 +188,8 @@ Optional: Judge0, LiveKit — see `.env.example`.
 | `backend/bin/railway-bootstrap` | **One-time** reset + migrate + seed |
 | `backend/bin/railway-start` | **Normal** migrate + Puma |
 | `.railwayignore` | Keep frontend/node_modules/data out of upload |
-| `DEPLOYMENT.md` | Railway + Vercel steps |
+| `RAILWAY_DEPLOYMENT_NOTES.md` | Railway + Vercel deploy notes (this file) |
+| `DEPLOYMENT.md` (local only) | Step-by-step how-to — gitignored |
 | Several `backend/db/migrate/*` | Production schema alignment |
 
 ---
