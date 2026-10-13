@@ -54,6 +54,8 @@ class SessionsChannel < ApplicationCable::Channel
 
   def code_change(data)
     session = current_session
+    return reject unless session.is_participant?(current_user)
+
     file_id = data["file_id"]
     content = data["content"]
 
@@ -80,6 +82,7 @@ class SessionsChannel < ApplicationCable::Channel
 
   def cursor_update(data)
     session = current_session
+    return reject unless session.is_participant?(current_user)
 
     broadcast_to session, {
       type: "cursor_update",
@@ -92,6 +95,7 @@ class SessionsChannel < ApplicationCable::Channel
 
   def typing(data)
     session = current_session
+    return reject unless session.is_participant?(current_user)
 
     broadcast_to session, {
       type: "typing",
@@ -103,6 +107,7 @@ class SessionsChannel < ApplicationCable::Channel
 
   def selection_update(data)
     session = current_session
+    return reject unless session.is_participant?(current_user)
 
     broadcast_to session, {
       type: "selection_update",
@@ -114,6 +119,7 @@ class SessionsChannel < ApplicationCable::Channel
 
   def whiteboard_update(data)
     session = current_session
+    return reject unless session.is_participant?(current_user)
 
     broadcast_to session, {
       type: "whiteboard_update",

@@ -6,8 +6,8 @@ module Api
     before_action :require_session_manager!, only: [:create, :destroy]
 
     def index
-      questions = @session.session_questions.includes(:question).order(assigned_at: :asc)
-      render json: questions.as_json(include: :question)
+      questions = @session.session_questions.includes(question: :test_cases).order(assigned_at: :asc)
+      render json: questions.map { |sq| format_session_question(sq) }
     end
 
     def create
@@ -15,14 +15,15 @@ module Api
       session_question = @session.session_questions.build(question: question)
 
       if session_question.save
-        render json: session_question.as_json(include: :question), status: :created
+        session_question = @session.session_questions.includes(question: :test_cases).find(session_question.id)
+        render json: format_session_question(session_question), status: :created
       else
         render json: { errors: session_question.errors.full_messages }, status: :unprocessable_entity
       end
     end
 
     def update
-      session_question = @session.session_questions.includes(:question).find(params[:id])
+      session_question = @session.session_questions.includes(question: :test_cases).find(params[:id])
 
       if params[:status] == "completed"
         session_question.mark_completed(params[:time_taken_seconds])
@@ -32,7 +33,7 @@ module Api
         session_question.update(status: params[:status])
       end
 
-      render json: session_question.as_json(include: :question)
+      render json: format_session_question(session_question.reload)
     end
 
     def destroy
@@ -46,6 +47,36 @@ module Api
     def set_session
       load_session_from_params!
       require_session_participant!
+    end
+
+    def format_session_question(session_question)
+      q = session_question.question
+      manager = current_participant&.owner? ||
+                current_participant&.interviewer? ||
+                @session.created_by_id == current_user.id
+
+      question_json =
+        if q
+          base = q.as_json(
+            only: [
+              :id, :title, :description, :difficulty, :category,
+              :time_limit_minutes, :starter_code, :source,
+              :external_id, :external_url, :created_at, :updated_at
+            ]
+          )
+          if manager
+            base["solution"] = q.solution
+            base["source_metadata"] = q.source_metadata
+            base["test_cases"] = q.test_cases.as_json
+          else
+            base["test_cases"] = q.test_cases.select { |tc|
+              !tc.respond_to?(:is_public) || tc.is_public
+            }.as_json
+          end
+          base
+        end
+
+      session_question.as_json.merge("question" => question_json)
     end
   end
 end

@@ -16,12 +16,16 @@ module Api
     end
     
     def create
-      filename = params[:filename].presence || "untitled"
+      filename = sanitize_filename(params[:filename].presence || "untitled")
+      path = sanitize_path(params[:path].presence || "/#{filename}", filename)
+      content = params[:content].to_s
+      content = content.byteslice(0, 1_000_000) if content.bytesize > 1_000_000
+
       file = @session.files.build(
         filename: filename,
-        path: params[:path].presence || "/#{filename}",
+        path: path,
         language: params[:language].presence || "javascript",
-        content: params[:content] || "",
+        content: content,
         created_by: current_user
       )
       
@@ -72,5 +76,18 @@ module Api
         Rails.logger.warn "Failed to broadcast file created: #{e.message}"
       end
     end
+
+    def sanitize_filename(name)
+      base = File.basename(name.to_s).gsub(/[^\w.\-+=@]/, "_")
+      base = "untitled" if base.blank? || base == "." || base == ".."
+      base[0, 255]
+    end
+
+    def sanitize_path(raw, filename)
+      cleaned = raw.to_s.gsub("\\", "/").split("/").reject { |p| p.empty? || p == "." || p == ".." }
+      cleaned = [filename] if cleaned.empty?
+      "/" + cleaned.map { |p| sanitize_filename(p) }.join("/")
+    end
   end
 end
+

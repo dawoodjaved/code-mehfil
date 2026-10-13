@@ -1,3 +1,7 @@
+if Rails.env.production?
+  abort "Refusing to run seeds in production (known test passwords / data wipe)."
+end
+
 # Clear existing data (use delete_all to avoid callback/enum load issues on empty/partial DBs)
 puts "Clearing existing data..."
 [Execution, ChatMessage, SessionQuestion, TestCase, SessionFile, SessionParticipant, Session, Question, User].each do |model|

@@ -33,9 +33,9 @@ Real-time collaborative coding for pair programming and technical interviews.
 cd frontend && pnpm install && cd ..
 cd backend && bundle install && cd ..
 
-# Environment
-cp .env.example .env.local
-# Set JWT_SECRET (and optional LiveKit / Judge0 keys)
+# Environment (generates a strong JWT_SECRET — do not commit .env files)
+./setup-env.sh
+# Or: cp .env.example .env.local  then set JWT_SECRET via: openssl rand -hex 32
 
 # Database
 docker compose up -d
@@ -47,3 +47,5 @@ cd frontend && pnpm dev
 ```
 
 Open the URL shown by Next.js (usually `http://localhost:3000` or `3005`), sign up, and create a session.
+
+**Secrets:** Never commit `.env` / `.env.local`. Never put server secrets in `NEXT_PUBLIC_*`. If a secret was ever hardcoded or committed, rotate it immediately.

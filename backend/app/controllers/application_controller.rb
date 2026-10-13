@@ -7,9 +7,13 @@ class ApplicationController < ActionController::API
   def authenticate_request
     result = AuthorizeApiRequest.call(request.headers)
     @current_user = result[:result]
-    render json: { error: 'Not Authorized' }, status: 401 unless @current_user
+    render json: { error: "Not Authorized" }, status: :unauthorized unless @current_user
+  rescue ExceptionHandler::AuthenticationError, JWT::DecodeError
+    render json: { error: "Not Authorized" }, status: :unauthorized
   rescue StandardError => e
-    render json: { error: e.message }, status: 401
+    # Do not leak exception details to clients (token internals, DB errors, etc.)
+    Rails.logger.warn("[auth] #{e.class}: #{e.message}")
+    render json: { error: "Not Authorized" }, status: :unauthorized
   end
   
   def authenticate_request_optional

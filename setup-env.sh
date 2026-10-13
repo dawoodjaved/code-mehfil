@@ -1,55 +1,33 @@
 #!/bin/bash
 
-# CodeMehfil - Environment Setup Script
-# This script creates .env files for backend and frontend with default values
+# Creates local .env files with a generated JWT_SECRET (never commit real .env files)
 
-echo "🚀 Setting up CodeMehfil environment files..."
+set -euo pipefail
 
-# Backend .env
-echo "📝 Creating backend/.env..."
-cat > backend/.env << 'EOF'
-# Database Configuration
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codemehfil_development
+echo "Setting up CodeMehfil environment files..."
 
-# Redis Configuration
+JWT_SECRET="$(openssl rand -hex 32)"
+
+echo "Creating backend/.env..."
+cat > backend/.env << EOF
+DATABASE_URL=postgresql://postgres:postgres@localhost:5433/codemehfil_development
 REDIS_URL=redis://localhost:6379/1
-
-# JWT Configuration
-JWT_SECRET=your_secret_key_change_this_in_production
-
-# Judge0 API Configuration (Get your API key from RapidAPI)
+JWT_SECRET=${JWT_SECRET}
 JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
-JUDGE0_API_KEY=your_rapidapi_key_here
-
-# Rails Environment
+JUDGE0_API_KEY=
 RAILS_ENV=development
-PORT=4000
+PORT=4004
+CORS_ORIGINS=http://localhost:3400,http://localhost:3005,http://localhost:3000
 EOF
 
-# Frontend .env.local
-echo "📝 Creating frontend/.env.local..."
+echo "Creating frontend/.env.local..."
 cat > frontend/.env.local << 'EOF'
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:4001
-
-# WebSocket URL
-NEXT_PUBLIC_WS_URL=ws://localhost:4000/cable
-
-# Frontend URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:4004
+NEXT_PUBLIC_CABLE_URL=ws://localhost:4004/cable
+NEXT_PUBLIC_APP_URL=http://localhost:3400
+NEXT_PUBLIC_LIVEKIT_URL=ws://localhost:7880
 EOF
 
 echo ""
-echo "✅ Environment files created successfully!"
-echo ""
-echo "⚠️  IMPORTANT: Update the following values:"
-echo "   1. backend/.env: JWT_SECRET (generate a secure random string)"
-echo "   2. backend/.env: JUDGE0_API_KEY (get from https://rapidapi.com/judge0-official/api/judge0-ce)"
-echo ""
-echo "📚 Next steps:"
-echo "   1. Start Docker services: docker-compose up -d"
-echo "   2. Set up database: cd backend && rails db:create db:migrate db:seed"
-echo "   3. Start backend: cd backend && rails server -p 4000"
-echo "   4. Start frontend: cd frontend && npm run dev"
-echo ""
-echo "🎉 Happy coding with CodeMehfil!"
+echo "Done. JWT_SECRET was auto-generated — do not commit backend/.env."
+echo "If any secret was previously hardcoded or committed, rotate it now."

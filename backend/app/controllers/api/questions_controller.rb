@@ -60,7 +60,13 @@ module Api
       render json: { error: "Only the question author can modify this" }, status: :forbidden
     end
 
+    def question_owner?(question)
+      question.created_by_id == current_user.id
+    end
+
     def format_question_json(question)
+      owner = question_owner?(question)
+
       templates = []
       if question.starter_code.present?
         question.starter_code.each do |lang, code|
@@ -68,13 +74,17 @@ module Api
         end
       end
 
-      test_cases = question.test_cases.map do |tc|
+      # Non-owners must not steal hidden expected outputs / solutions
+      test_cases = question.test_cases.filter_map do |tc|
+        is_public = tc.respond_to?(:is_public) ? tc.is_public : true
+        next if !owner && !is_public
+
         {
           id: tc.id,
           input: tc.input,
           expectedOutput: tc.expected_output,
-          isPublic: tc.respond_to?(:is_public) ? tc.is_public : true,
-          isHidden: tc.respond_to?(:is_public) ? !tc.is_public : false
+          isPublic: is_public,
+          isHidden: !is_public
         }
       end
 
@@ -83,7 +93,7 @@ module Api
       topics += question.topics if question.topics.present? && question.topics.is_a?(Array)
       topics += question.tags if question.respond_to?(:tags) && question.tags.present?
 
-      {
+      payload = {
         id: question.id,
         title: question.title,
         description: question.description,
@@ -94,11 +104,9 @@ module Api
         templates: templates,
         testCases: test_cases,
         starterCode: question.starter_code,
-        solution: question.solution,
         source: question.source,
         externalId: question.external_id,
         externalUrl: question.external_url,
-        sourceMetadata: question.source_metadata,
         createdBy: question.created_by && {
           id: question.created_by.id,
           name: question.created_by.name
@@ -106,6 +114,13 @@ module Api
         createdAt: question.created_at,
         updatedAt: question.updated_at
       }
+
+      if owner
+        payload[:solution] = question.solution
+        payload[:sourceMetadata] = question.source_metadata
+      end
+
+      payload
     end
 
     def question_params
