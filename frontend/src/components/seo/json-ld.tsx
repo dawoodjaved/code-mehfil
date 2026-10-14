@@ -6,6 +6,8 @@ const structuredData = {
   name: SITE_NAME,
   alternateName: ["Code Mehfil", "code mehfil", "CodeMehfil"],
   url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  image: `${SITE_URL}/logo.png`,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web",
   description:

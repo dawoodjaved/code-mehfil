@@ -124,20 +124,32 @@ export default function SignInPage() {
           style={{ background: "#9333ea", transform: "translate(-30%, 30%)" }}
         />
       </div>
-      <Suspense
-        fallback={
-          <Card className="w-full max-w-md glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-text-primary">Sign in</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center py-8">
-              <LoadingIndicator />
-            </CardContent>
-          </Card>
-        }
-      >
-        <SignInForm />
-      </Suspense>
+      <div className="relative z-cards flex w-full max-w-md flex-col items-center gap-6">
+        <Link href="/" className="shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="code-mehfil"
+            width={112}
+            height={112}
+            className="h-24 w-24 sm:h-28 sm:w-28 drop-shadow-[0_0_28px_rgba(255,0,51,0.28)]"
+          />
+        </Link>
+        <Suspense
+          fallback={
+            <Card className="w-full glass border-white/10">
+              <CardHeader>
+                <CardTitle className="text-text-primary">Sign in</CardTitle>
+              </CardHeader>
+              <CardContent className="flex justify-center py-8">
+                <LoadingIndicator />
+              </CardContent>
+            </Card>
+          }
+        >
+          <SignInForm />
+        </Suspense>
+      </div>
     </div>
   );
 }

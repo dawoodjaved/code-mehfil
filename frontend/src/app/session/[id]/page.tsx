@@ -705,7 +705,7 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
               className="shrink-0 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/mark.png" alt="" width={22} height={22} className="rounded-md" />
+              <img src="/logo.png" alt="" width={22} height={22} className="rounded-md" />
               <span className="hidden sm:inline">CodeMehfil</span>
             </Link>
             <span className="text-muted-foreground/40 hidden sm:inline">/</span>

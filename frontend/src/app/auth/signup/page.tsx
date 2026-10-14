@@ -13,9 +13,21 @@ import { LoadingIndicator } from "@/components/ui/loading-indicator";
 export default function SignUpPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-bg-primary p-4 overflow-hidden">
-      <Suspense fallback={<LoadingIndicator />}>
-        <SignUpForm />
-      </Suspense>
+      <div className="flex w-full max-w-md flex-col items-center gap-6">
+        <Link href="/" className="shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="code-mehfil"
+            width={112}
+            height={112}
+            className="h-24 w-24 sm:h-28 sm:w-28 drop-shadow-[0_0_28px_rgba(255,0,51,0.28)]"
+          />
+        </Link>
+        <Suspense fallback={<LoadingIndicator />}>
+          <SignUpForm />
+        </Suspense>
+      </div>
     </div>
   );
 }
