@@ -127,13 +127,13 @@ export default function HomePage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
-              alt="CodeMehfil"
-              width={88}
-              height={88}
-              className="w-16 h-16 sm:w-[88px] sm:h-[88px] rounded-[18px] sm:rounded-[22px] shadow-[0_0_40px_rgba(255,0,51,0.35)]"
+              alt="code-mehfil"
+              width={280}
+              height={280}
+              className="w-44 h-44 sm:w-64 sm:h-64 drop-shadow-[0_0_40px_rgba(255,0,51,0.28)]"
             />
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-text-primary px-2">
-              CodeMehfil <span className="text-accent-red">2025</span>
+              CodeMehfil <span className="text-accent-red">2026</span>
             </h1>
           </div>
           <p className="text-base sm:text-xl md:text-2xl text-text-muted max-w-2xl mx-auto px-2">

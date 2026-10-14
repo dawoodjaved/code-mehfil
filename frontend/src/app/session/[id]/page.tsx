@@ -26,10 +26,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import Link from "next/link";
+import { LoadingIndicator, LoadingScreen } from "@/components/ui/loading-indicator";
 
 const tabFallback = (
-  <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-    Loading…
+  <div className="h-full flex items-center justify-center">
+    <LoadingIndicator />
   </div>
 );
 
@@ -553,11 +554,7 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
   };
 
   if (access === "loading") {
-    return (
-      <div className="h-screen flex items-center justify-center text-sm text-muted-foreground">
-        Verifying session access…
-      </div>
-    );
+    return <LoadingScreen className="h-screen bg-background" />;
   }
 
   if (access === "denied") {
@@ -708,7 +705,7 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
               className="shrink-0 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="" width={22} height={22} className="rounded-md" />
+              <img src="/mark.png" alt="" width={22} height={22} className="rounded-md" />
               <span className="hidden sm:inline">CodeMehfil</span>
             </Link>
             <span className="text-muted-foreground/40 hidden sm:inline">/</span>
@@ -828,10 +825,7 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
                   className="gap-2"
                 >
                   {isExecuting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                      Running...
-                    </>
+                    <LoadingIndicator size={14} tone="light" label="Running" />
                   ) : (
                     <>
                       <TerminalIcon className="w-4 h-4" />
@@ -853,8 +847,8 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
                     userName={currentUser?.name}
                   />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-                    Loading editor…
+                  <div className="h-full flex items-center justify-center">
+                    <LoadingIndicator />
                   </div>
                 )}
               </div>
@@ -895,10 +889,7 @@ function SessionWorkspace({ sessionId }: { sessionId: string }) {
                   />
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                      <p>Loading video room...</p>
-                    </div>
+                    <LoadingIndicator />
                   </div>
                 )}
               </div>

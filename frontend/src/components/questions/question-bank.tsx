@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 export interface BankQuestion {
   id: string;
@@ -143,7 +144,11 @@ export function QuestionBank({
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <LoadingIndicator />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredQuestions.map((question) => (

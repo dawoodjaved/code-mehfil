@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { BlurOrbs } from "@/components/vr-landing/blur-orbs";
 import { AppNav } from "@/components/dashboard/app-nav";
 import { RequireAuth } from "@/components/auth/require-auth";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 function JoinForm() {
   const router = useRouter();
@@ -100,7 +101,7 @@ function JoinForm() {
             disabled={isLoading}
             className="w-full bg-accent-red hover:bg-accent-red-hover rounded-full"
           >
-            {isLoading ? "Joining…" : "Join Session"}
+            {isLoading ? <LoadingIndicator size={18} tone="light" label="Joining" /> : "Join Session"}
           </Button>
           <p className="text-center text-sm text-text-muted">
             <Link href="/sessions" className="text-accent-red hover:underline">
@@ -134,8 +135,10 @@ export default function JoinSessionPage() {
                 <Card className="w-full glass border-white/10">
                   <CardHeader>
                     <CardTitle className="text-text-primary">Join a Session</CardTitle>
-                    <CardDescription className="text-text-muted">Loading…</CardDescription>
                   </CardHeader>
+                  <CardContent className="flex justify-center py-8">
+                    <LoadingIndicator />
+                  </CardContent>
                 </Card>
               }
             >

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { resolveNextPath } from "@/lib/auth";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 function SignInForm() {
   const searchParams = useSearchParams();
@@ -93,7 +94,7 @@ function SignInForm() {
             disabled={isLoading}
             className="w-full bg-accent-red hover:bg-accent-red-hover rounded-full"
           >
-            {isLoading ? "Signing in…" : "Sign in"}
+            {isLoading ? <LoadingIndicator size={18} tone="light" label="Signing in" /> : "Sign in"}
           </Button>
           <p className="text-center text-sm text-text-muted">
             No account?{" "}
@@ -128,8 +129,10 @@ export default function SignInPage() {
           <Card className="w-full max-w-md glass border-white/10">
             <CardHeader>
               <CardTitle className="text-text-primary">Sign in</CardTitle>
-              <CardDescription>Loading…</CardDescription>
             </CardHeader>
+            <CardContent className="flex justify-center py-8">
+              <LoadingIndicator />
+            </CardContent>
           </Card>
         }
       >

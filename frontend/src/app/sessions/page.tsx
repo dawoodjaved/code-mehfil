@@ -10,6 +10,7 @@ import { Plus, Users, Calendar, Search, ArrowUpRight, Sparkles } from "lucide-re
 import { AppNav } from "@/components/dashboard/app-nav";
 import { DashboardStats } from "@/components/dashboard/stat-charts";
 import { RequireAuth } from "@/components/auth/require-auth";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 interface Session {
   id: string;
@@ -94,30 +95,8 @@ function SessionsPageInner() {
     return (
       <div className="min-h-screen bg-bg-primary">
         <AppNav />
-        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4">
-          <svg width="72" height="72" viewBox="0 0 72 72">
-            <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,0,51,0.2)" strokeWidth="4" />
-            <circle
-              cx="36"
-              cy="36"
-              r="28"
-              fill="none"
-              stroke="#ff0033"
-              strokeWidth="4"
-              strokeDasharray="40 140"
-              strokeLinecap="round"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0 36 36"
-                to="360 36 36"
-                dur="1s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          </svg>
-          <p className="text-text-muted">Loading your mehfil…</p>
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <LoadingIndicator size={40} />
         </div>
       </div>
     );

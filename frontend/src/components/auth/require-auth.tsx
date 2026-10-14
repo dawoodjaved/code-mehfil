@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiBase, clearAuthToken, getAuthToken, signInPath } from "@/lib/auth";
+import { LoadingScreen } from "@/components/ui/loading-indicator";
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -61,11 +62,7 @@ export function RequireAuth({ children, next }: RequireAuthProps) {
   }, [router, pathname, next]);
 
   if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-sm text-muted-foreground">
-        Checking sign-in…
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;

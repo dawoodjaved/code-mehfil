@@ -12,6 +12,7 @@ import { BlurOrbs } from "@/components/vr-landing/blur-orbs";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import { AppNav } from "@/components/dashboard/app-nav";
 import { RequireAuth } from "@/components/auth/require-auth";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 export default function NewSessionPage() {
   return (
@@ -308,7 +309,7 @@ function NewSessionForm() {
                   disabled={isLoading}
                   className="bg-accent-red hover:bg-accent-red-hover text-white font-semibold rounded-full px-6 py-2 transition-all duration-300 hover:scale-105 hover:shadow-glow-red"
                 >
-                  {isLoading ? "Creating..." : "Create Session"}
+                  {isLoading ? <LoadingIndicator size={18} tone="light" label="Creating session" /> : "Create Session"}
                 </Button>
               </div>
             </form>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Search } from "lucide-react";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { BankQuestion } from "@/components/questions/question-bank";
 
 interface HackerRankRecommenderProps {
@@ -136,7 +137,11 @@ export function HackerRankRecommender({ onSelectQuestion }: HackerRankRecommende
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <LoadingIndicator />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filtered.map((question) => (

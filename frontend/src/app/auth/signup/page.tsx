@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { resolveNextPath } from "@/lib/auth";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 export default function SignUpPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-bg-primary p-4 overflow-hidden">
-      <Suspense fallback={<div className="text-text-muted text-sm">Loading…</div>}>
+      <Suspense fallback={<LoadingIndicator />}>
         <SignUpForm />
       </Suspense>
     </div>
@@ -146,7 +147,7 @@ function SignUpForm() {
             disabled={isLoading}
             className="w-full bg-accent-red hover:bg-accent-red-hover rounded-full"
           >
-            {isLoading ? "Creating…" : "Sign up"}
+            {isLoading ? <LoadingIndicator size={18} tone="light" label="Creating account" /> : "Sign up"}
           </Button>
           <p className="text-center text-sm text-text-muted">
             Already have an account?{" "}
